@@ -1,6 +1,3 @@
-// Will handle cases when write and read are enabled at the same time in the future
-// Byte-addressable memory
-// Assume each row stores a byte
 module buffer #(
     parameter int DEPTH = 64,
     parameter int DATA_WIDTH = 8,
@@ -11,8 +8,6 @@ module buffer #(
     input logic [ADDR_WIDTH-1:0] i_write_addr, i_read_addr
     output logic [DATA_WIDTH-1:0] o_data_out
 );
-    localparam ADDR_WIDTH = $clog2(DEPTH);
-
     logic [DATA_WIDTH-1:0] buffer [DEPTH-1:0];
     logic [DATA_WIDTH-1:0] reg_data_out;
 

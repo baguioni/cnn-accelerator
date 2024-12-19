@@ -1,0 +1,138 @@
+$date
+	Fri Dec 20 04:58:45 2024
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1s
+$end
+$scope module sram_rw_tb $end
+$var wire 16 ! o_data_out [15:0] $end
+$var parameter 32 " ADDR_WIDTH $end
+$var parameter 32 # DATA_WIDTH $end
+$var parameter 32 $ DEPTH $end
+$var parameter 32 % INPUT_WIDTH $end
+$var parameter 32 & OUTPUT_WIDTH $end
+$var parameter 32 ' READ_WIDTH $end
+$var parameter 32 ( WRITE_WIDTH $end
+$var reg 1 ) i_clk $end
+$var reg 32 * i_data_in [31:0] $end
+$var reg 1 + i_nrst $end
+$var reg 16 , i_read_addr [15:0] $end
+$var reg 1 - i_read_en $end
+$var reg 8 . i_write_addr [7:0] $end
+$var reg 1 / i_write_en $end
+$scope module dut $end
+$var wire 1 ) i_clk $end
+$var wire 32 0 i_data_in [31:0] $end
+$var wire 1 + i_nrst $end
+$var wire 16 1 i_read_addr [15:0] $end
+$var wire 1 - i_read_en $end
+$var wire 8 2 i_write_addr [7:0] $end
+$var wire 1 / i_write_en $end
+$var parameter 32 3 ADDR_WIDTH $end
+$var parameter 32 4 DATA_WIDTH $end
+$var parameter 32 5 DEPTH $end
+$var parameter 32 6 READ_WIDTH $end
+$var parameter 32 7 WRITE_WIDTH $end
+$var reg 16 8 o_data_out [15:0] $end
+$scope begin $ivl_for_loop0 $end
+$var integer 32 9 i [31:0] $end
+$upscope $end
+$scope begin $ivl_for_loop1 $end
+$var integer 32 : i [31:0] $end
+$upscope $end
+$scope begin $ivl_for_loop2 $end
+$var integer 32 ; i [31:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b100 7
+b10 6
+b1000000 5
+b1000 4
+b1000 3
+b100 (
+b10 '
+b10000 &
+b100000 %
+b1000000 $
+b1000 #
+b1000 "
+$end
+#0
+$dumpvars
+b0 ;
+b0 :
+b100000000 9
+bx 8
+b0 2
+b0 1
+b0 0
+0/
+b0 .
+0-
+b0 ,
+0+
+b0 *
+0)
+bx !
+$end
+#5
+b100000000 9
+1)
+#10
+0)
+1+
+#15
+1)
+#20
+0)
+b10100001101100101100001111010100 *
+b10100001101100101100001111010100 0
+1/
+#25
+b100 :
+1)
+#30
+0)
+0/
+#35
+1)
+#40
+0)
+b100000000 ,
+b100000000 1
+1-
+#45
+b1011001010100001 !
+b1011001010100001 8
+b10 ;
+1)
+#50
+0)
+0-
+#55
+1)
+#60
+0)
+#65
+1)
+#70
+0)
+#75
+1)
+#80
+0)
+#85
+1)
+#90
+0)
+#95
+1)
+#100
+0)

@@ -1,7 +1,6 @@
 module tile_reader #(
-    parameter int DATA_WIDTH = 8,
-    parameter int BUF_DEPTH = 64,
-    localparam ADDR_WIDTH = $clog2(BUF_DEPTH);
+    parameter int DATA_WIDTH = 64,
+    parameter int ADDR_WIDTH = 8
 ) (
     input logic i_clk, i_nrst, 
 
@@ -10,13 +9,13 @@ module tile_reader #(
     input logic [ADDR_WIDTH-1:0] i_start_addr, i_addr_end,  
     
     // Buffer signals
-    input logic [DATA_WIDTH-1:0] i_data_in,
+    // input logic [DATA_WIDTH-1:0] i_data_in,
     output logic o_buf_read_en, o_read_done, o_valid_addr,
     output logic [ADDR_WIDTH-1:0] o_read_addr, 
     
     // Routing signals
-    output logic [ADDR_WIDTH-1:0] o_data_addr,
-    output logic [DATA_WIDTH-1:0] o_data
+    output logic [ADDR_WIDTH-1:0] o_data_addr
+    // output logic [DATA_WIDTH-1:0] o_data
 );
     logic [ADDR_WIDTH-1:0] reg_counter, reg_read_addr, reg_prev_read_addr;
 
@@ -65,7 +64,7 @@ module tile_reader #(
     end
 
     always_comb begin
-        o_data = i_data_in;
+        // o_data = i_data_in;
         o_read_addr = reg_read_addr;
         o_data_addr = reg_prev_read_addr;
     end

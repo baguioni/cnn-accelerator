@@ -1,92 +1,123 @@
 module tb_row_router;
-    // Parameters
-    parameter int DATA_WIDTH = 8;
-    parameter int ADDR_WIDTH = 6;
-    parameter int FIFO_DEPTH = 16;
 
-    // Testbench signals
-    logic clk;
-    logic nrst;
-    logic en, reg_clear, stall_en;
-    logic [ADDR_WIDTH-1:0] k_size, k_num, i_size;
-    logic [ADDR_WIDTH-1:0] o_x, o_y, start_addr;
-    logic valid_addr;
-    logic [DATA_WIDTH-1:0] data_in;
-    logic [ADDR_WIDTH-1:0] current_addr;
-    logic ag_done;
+    // Parameters
+    localparam DATA_WIDTH = 8;
+    localparam DATA_LENGTH = 9;
+    localparam ADDR_WIDTH = 8;
+    localparam KERNEL_SIZE = 3;
+    localparam PEEK_WIDTH = 4;
+
+    // Testbench Signals
+    logic i_clk, i_nrst, i_en, i_reg_clear, i_pop_en, i_peek_en;
+    logic [ADDR_WIDTH-1:0] i_o_x, i_o_y, i_i_size, i_start_addr;
+    logic [0:PEEK_WIDTH-1] i_addr_hit;
+    logic [0:PEEK_WIDTH-1][DATA_WIDTH-1:0] o_peek_addr;
+    logic i_data_hit, i_miso_pop_en;
+    logic [0:PEEK_WIDTH-1][DATA_WIDTH-1:0] i_data;
 
     // Instantiate DUT
     row_router #(
         .DATA_WIDTH(DATA_WIDTH),
+        .DATA_LENGTH(DATA_LENGTH),
         .ADDR_WIDTH(ADDR_WIDTH),
-        .FIFO_DEPTH(FIFO_DEPTH)
+        .KERNEL_SIZE(KERNEL_SIZE),
+        .PEEK_WIDTH(PEEK_WIDTH)
     ) dut (
-        .i_clk(clk),
-        .i_nrst(nrst),
-        .i_en(en),
-        .i_reg_clear(reg_clear),
-        .i_stall_en(stall_en),
-        .i_k_size(k_size),
-        .i_k_num(k_num),
-        .i_i_size(i_size),
-        .i_o_x(o_x),
-        .i_o_y(o_y),
-        .i_start_addr(start_addr),
-        .o_ag_done(ag_done),
-        .i_valid_addr(valid_addr),
-        .i_data_in(data_in),
-        .i_addr(current_addr)
+        .i_clk(i_clk),
+        .i_nrst(i_nrst),
+        .i_en(i_en),
+        .i_reg_clear(i_reg_clear),
+        .i_o_x(i_o_x),
+        .i_o_y(i_o_y),
+        .i_i_size(i_i_size),
+        .i_start_addr(i_start_addr),
+        .i_pop_en(i_pop_en),
+        .i_addr_hit(i_addr_hit),
+        .i_peek_en(i_peek_en),
+        .o_peek_addr(o_peek_addr),
+        .i_data_hit(i_data_hit),
+        .i_miso_pop_en(i_miso_pop_en),
+        .i_data(i_data)
     );
 
     // Clock generation
-    initial begin
-        clk = 0;
-        forever #5 clk = ~clk; // 10ns clock period
-    end
+    initial i_clk = 0;
+    always #5 i_clk = ~i_clk; // 10ns clock period
 
-    // Test sequence
+    // Testbench
     initial begin
-                $dumpfile("tb.vcd");
+        $dumpfile("tb.vcd");
         $dumpvars;
-        // Initialize signals
-        nrst = 0;
-        en = 0;
-        reg_clear = 0;
-        stall_en = 0;
-        k_size = 3;
-        k_num = 9;
-        i_size = 5;
-        o_x = 0;
-        o_y = 0;
-        start_addr = 0;
-        valid_addr = 0;
-        data_in = 0;
-        current_addr = 0;
 
-        // Reset sequence
-        #10 nrst = 1;
-        #10 reg_clear = 1;
-        #10 reg_clear = 0;
-
-        // Enable the module
-        #10 en = 1;
-        // Wait for address generator to finish
-        wait (ag_done);
-
-        for (int i = 0; i < 16; i++) begin
-            current_addr = i; // Simulate sequential addresses
-            valid_addr = 1;
-            data_in = i; // Simulate random data input
-            #10;
+        // Initialization
+        i_nrst = 0;
+        i_en = 0;
+        i_reg_clear = 0;
+        i_pop_en = 0;
+        i_peek_en = 0;
+        i_data_hit = 0;
+        i_miso_pop_en = 0;
+        i_o_x = 0;
+        i_o_y = 0;
+        i_i_size = 0;
+        i_start_addr = 0;
+        i_addr_hit = 4'b0;
+        for (int i = 0; i < PEEK_WIDTH; i++) begin
+            i_data[i] = {DATA_WIDTH{1'b0}};
         end
 
-        // End simulation
-        #50 $finish;
-    end
+        // Reset
+        #10;
+        i_nrst = 1;
 
-    // // Monitor outputs
-    // initial begin
-    //     $monitor("Time: %0t | ag_done: %b | fifo_addr_peek: %h | fifo_data_full: %b",
-    //              $time, ag_done, dut.fifo_addr_peek, dut.fifo_data_full);
-    // end
+        // Initialize parameters
+        i_i_size = 5; // Example input size
+        i_start_addr = 0; // Example starting address
+        i_o_x = 0;
+        i_o_y = 0;
+
+        // Enable address generation
+        i_en = 1;
+        #50; // Wait for address generation
+        i_en = 0;
+
+
+
+        // Peek addresses
+        i_peek_en = 1;
+        #10;
+        $display("Peeked Addresses:");
+        for (int i = 0; i < PEEK_WIDTH; i++) begin
+            $display("Address[%0d]: %0h", i, o_peek_addr[i]);
+        end
+        i_peek_en = 0;
+
+        // Pop specific data from `mpp_fifo`
+        i_pop_en = 1;
+        i_addr_hit = 4'b1000; // Pop the 4th element
+        #10;
+        i_pop_en = 0;
+
+                // Provide data for `miso_fifo`
+        for (int i = 0; i < PEEK_WIDTH; i++) begin
+            i_data[i] = i + 1; // Example data
+        end
+        i_data_hit = 1; // Enable write to `miso_fifo`
+        #10;
+        i_data_hit = 0;
+
+        // Pop data from `miso_fifo`
+        i_miso_pop_en = 1;
+        #10;
+        i_miso_pop_en = 0;
+
+        // Clear registers
+        i_reg_clear = 1;
+        #10;
+        i_reg_clear = 0;
+
+        // Finish simulation
+        #20;
+        $finish;
+    end
 endmodule

@@ -1,0 +1,83 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Tue Jan  7 07:51:35 2025
+[*]
+[dumpfile] "/home/baguioni/School/eee199/cnn-accelerator/rtl/router/sequential/tb.vcd"
+[dumpfile_mtime] "Tue Jan  7 07:50:42 2025"
+[dumpfile_size] 15334
+[savefile] "/home/baguioni/School/eee199/cnn-accelerator/rtl/router/sequential/working.gtkw"
+[timestart] 0
+[size] 1916 1005
+[pos] -1 -1
+*-4.000000 84 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_top.
+[treeopen] tb_top.dut.
+[treeopen] tb_top.dut.row_router_inst.
+[sst_width] 214
+[signals_width] 211
+[sst_expanded] 1
+[sst_vpaned_height] 294
+@28
+tb_top.i_clk
+tb_top.i_en
+@200
+-Write to Buffer
+@28
+tb_top.i_sram_write_en
+@22
+tb_top.i_data_in[63:0]
+tb_top.i_write_addr[7:0]
+@28
+sram_inst.o_data_out_valid
+@200
+-Tile Reader
+@28
+tb_top.dut.i_tile_read_en
+@22
+tb_top.dut.sram_data_out[63:0]
+tile_reader_inst.o_read_addr[7:0]
+tile_reader_inst.o_data_addr[7:0]
+@200
+-Address Generator
+@22
+address_generator.o_addr[71:0]
+@28
+address_generator.i_en
+@22
+address_generator.i_i_size[7:0]
+@200
+-MPP FIFO
+@22
+mpp_fifo.i_data_in[71:0]
+@28
+mpp_fifo.i_write_en
+@200
+-MPP Pop
+@28
+mpp_fifo.i_pop_en
+@22
+mpp_fifo.pop_offset[3:0]
+@200
+-Address Comparator
+@28
+tb_top.dut.row_router_inst.address_comparator.i_en
+@22
+tb_top.dut.row_router_inst.address_comparator.i_addr[7:0]
+tb_top.dut.row_router_inst.address_comparator.i_data[63:0]
+@28
+tb_top.dut.row_router_inst.address_comparator.o_addr_hit[0:7]
+@22
+tb_top.dut.row_router_inst.address_comparator.o_data_hit[63:0]
+@200
+-MISO FIFO
+@28
+miso_fifo.i_write_en
+@22
+miso_fifo.i_data[63:0]
+@28
+miso_fifo.i_valid[7:0]
+miso_fifo.i_pop_en
+@23
+miso_fifo.o_data[7:0]
+[pattern_trace] 1
+[pattern_trace] 0

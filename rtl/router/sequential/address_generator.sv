@@ -10,6 +10,7 @@ module address_generator #(
 );
     logic [0:DATA_LENGTH-1][ADDR_WIDTH-1:0] addr;
     logic write_done;
+    
     genvar x, y;
     generate
         for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x

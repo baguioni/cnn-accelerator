@@ -8,11 +8,10 @@ module tb_top;
     localparam int DATA_LENGTH = 9;
 
     // Signals
-    logic i_clk, i_nrst, i_en, i_reg_clear, i_sram_write_en, i_tile_read_en;
-    logic i_ag_en, i_ac_en; // Added control signals
+    logic i_clk, i_nrst, i_en, i_reg_clear, i_sram_write_en;
     logic [DATA_WIDTH-1:0] i_data_in;
     logic [ADDR_WIDTH-1:0] i_write_addr, i_start_addr, i_addr_end, i_o_x, i_o_y, i_i_size, i_o_size;
-    logic o_read_done, i_miso_pop_en, o_rr_en;
+    logic o_read_done, i_miso_pop_en, o_route_done;
 
     // File-related variables
     integer file, r;
@@ -25,16 +24,12 @@ module tb_top;
         .i_en(i_en),
         .i_reg_clear(i_reg_clear),
         .i_sram_write_en(i_sram_write_en),
-        .i_tile_read_en(i_tile_read_en),
-        .i_ag_en(i_ag_en),    // Address Generator Enable
-        .i_ac_en(i_ac_en),    // Address Controller Enable
-        .i_miso_pop_en(i_miso_pop_en),
         .i_data_in(i_data_in),
         .i_write_addr(i_write_addr),
         .i_start_addr(i_start_addr),
         .i_addr_end(i_addr_end),
         .o_read_done(o_read_done),
-        .o_rr_en(o_rr_en),
+        .o_route_done(o_route_done),
         .i_o_x(i_o_x),
         .i_o_y(i_o_y),
         .i_i_size(i_i_size),
@@ -55,11 +50,7 @@ module tb_top;
         i_en = 0;
         i_reg_clear = 0;
         i_sram_write_en = 0;
-        i_tile_read_en = 0;
-        i_ag_en = 0;
-        i_ac_en = 0;
         i_write_addr = 0;
-        i_miso_pop_en = 0;
         i_data_in = 0;
         i_start_addr = 0;
         i_addr_end = 0;
@@ -70,10 +61,7 @@ module tb_top;
         // Reset
         #10;
         i_nrst = 1;
-        #10;
-        i_en = 1;
-        #50;
-        i_ag_en = 1;
+
 
         // Open and read the .mem file
         file = $fopen("sram.mem", "r");
@@ -101,20 +89,11 @@ module tb_top;
         i_start_addr = 0; // Start address for tile reading
         i_addr_end = i_write_addr - 1; // Last address written
 
-        // Enable tile reading
-        i_tile_read_en = 1;
         #10;
-        i_ac_en = 1;
-        #10;
+        i_en = 1;
 
-        // Wait until all addresses are read
-        wait (o_read_done);
-        i_tile_read_en = 0;
-        i_miso_pop_en = 1;
-        #150;
+        #750;
 
-        // Finish simulation
-        #20;
         $finish;
     end
 endmodule

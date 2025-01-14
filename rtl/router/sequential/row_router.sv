@@ -22,7 +22,10 @@ module row_router #(
 
     // MISO FIFO related signals
     output logic [DATA_WIDTH-1:0] o_data,
-    output logic o_miso_empty, o_valid
+    output logic o_miso_empty, o_valid,
+
+    // MPP FIFO related signals
+    output logic o_mpp_empty
 );
     logic [PEEK_WIDTH-1:0] valid_data;
     logic [0:DATA_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
@@ -66,7 +69,7 @@ module row_router #(
         // .i_peek_en(i_peek_en),
         .o_peek_data(peek_addr),
         .o_peek_valid(peek_valid),
-        .o_empty(),
+        .o_empty(o_mpp_empty),
         .o_full()
     );
 

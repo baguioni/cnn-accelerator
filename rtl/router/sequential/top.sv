@@ -3,7 +3,7 @@
 // of each operation so that it can be timed with weight router
 module top (
     input logic i_clk, i_nrst, i_en, i_reg_clear,
-    input logic i_sram_write_en, i_tile_read_en, i_ag_en, i_ac_en, i_miso_pop_en,
+    input logic i_sram_write_en, 
 
     // SRAM input signals
     input logic [SRAM_DATA_WIDTH-1:0] i_data_in,
@@ -11,7 +11,7 @@ module top (
 
     // Tile Reader Control signals
     input logic [ADDR_WIDTH-1:0] i_start_addr, i_addr_end,
-    output logic o_read_done, o_rr_en,
+    output logic o_read_done, o_route_done,
 
     // Address Generator Control signals
     // Soon remove i_o_x, i_o_y
@@ -22,7 +22,7 @@ module top (
 );
     localparam int SRAM_DATA_WIDTH = 64;
     localparam int ADDR_WIDTH = 8;
-    localparam int ROUTER_COUNT = 4;
+    localparam int ROUTER_COUNT = 3;
     localparam int DATA_WIDTH = 8;
 
     sram #(
@@ -44,14 +44,15 @@ module top (
     logic [ADDR_WIDTH-1:0] sram_read_addr, tr_data_addr;
     logic sram_read_en, tr_valid_addr;
 
+
     tile_reader #(
         .DATA_WIDTH(SRAM_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) tile_reader_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
-        .i_read_en(i_tile_read_en),
-        .i_reg_clear(i_reg_clear),
+        .i_read_en(tile_read_en),
+        .i_reg_clear(router_reg_clear),
         .i_start_addr(i_start_addr),
         .i_addr_end(i_addr_end),
         .o_buf_read_en(sram_read_en),
@@ -61,25 +62,64 @@ module top (
         .o_data_addr(tr_data_addr)
     );
 
-    logic [ROUTER_COUNT-1:0][ADDR_WIDTH-1:0] o_x, o_y;
+    
 
     // eventually remove this and replace with a higher level component
-    row_router_controller #(
-        .ROUTER_COUNT(ROUTER_COUNT),
+    // row_router_controller #(
+    //     .ROUTER_COUNT(ROUTER_COUNT),
+    //     .ADDR_WIDTH(ADDR_WIDTH)
+    // ) row_router_controller_inst (
+    //     .i_clk(i_clk),
+    //     .i_nrst(i_nrst),
+    //     .i_reg_clear(i_reg_clear),
+    //     .i_en(i_en),
+    //     .i_o_x(i_o_x),
+    //     .i_o_y(i_o_y),
+    //     .i_o_size(i_o_size),
+    //     .o_x(o_x),
+    //     .o_y(o_y),
+    //     .o_rr_en(o_rr_en)
+    // );
+
+    logic [ROUTER_COUNT-1:0] row_id;
+    logic [ADDR_WIDTH-1:0] o_x, o_y;
+    logic ag_en, ac_en, tile_read_en, pop_en, router_reg_clear;
+
+    router_controller #(
+        .ROW_COUNT(ROUTER_COUNT),
         .ADDR_WIDTH(ADDR_WIDTH)
-    ) row_router_controller_inst (
+    ) controller (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
-        .i_reg_clear(i_reg_clear),
         .i_en(i_en),
-        .i_o_x(i_o_x),
-        .i_o_y(i_o_y),
+        .i_reg_clear(i_reg_clear),
+        .i_start_addr(i_start_addr),
         .i_o_size(i_o_size),
-        .o_x(o_x),
-        .o_y(o_y),
-        .o_rr_en(o_rr_en)
+        .o_row_id(row_id),
+        .o_o_x(o_x),
+        .o_o_y(o_y),
+        .o_ag_en(ag_en),
+        .o_ac_en(ac_en),
+        .o_tile_read_en(tile_read_en),
+        .o_pop_en(pop_en),
+        .i_addr_empty(router_addr_empty),
+        .i_data_empty(router_data_empty),
+        .o_done(o_route_done),
+        .o_reg_clear(router_reg_clear)
     );
 
+
+    logic router_addr_empty, router_data_empty;
+
+    /*
+        When routing data.
+
+            When reading from tile and all the data has been fetched
+                o_addr_empty will be high
+            When all the data has been pushed from the router
+                o_data_empty will be high
+
+    */
     router #(
         .ROUTER_COUNT(ROUTER_COUNT),
         .SRAM_DATA_WIDTH(SRAM_DATA_WIDTH),
@@ -88,18 +128,21 @@ module top (
     ) router_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
-        .i_reg_clear(i_reg_clear),
-        .i_ag_en(i_ag_en),
-        .i_ac_en(i_ac_en),
-        .i_miso_pop_en(i_miso_pop_en),
+        .i_reg_clear(router_reg_clear),
+        .i_ag_en(ag_en),
+        .i_ac_en(ac_en),
+        .i_miso_pop_en(pop_en),
         .i_o_x(o_x),
         .i_o_y(o_y),
         .i_i_size(i_i_size),
         .i_start_addr(i_start_addr),
+        .i_row_id(row_id),
         .i_data(sram_data_out),
         .i_addr(tr_data_addr),
         .i_data_valid(sram_data_out_valid),
-        .o_data(o_data)
+        .o_data(o_data),
+        .o_data_empty(router_data_empty),
+        .o_addr_empty(router_addr_empty)
     );
 
 endmodule

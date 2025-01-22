@@ -11,7 +11,7 @@ module router_controller #(
     input logic i_clk, i_nrst, i_en, i_reg_clear,
 
     // Input parameters
-    input logic [ADDR_WIDTH-1:0] i_start_addr, i_o_size,
+    input logic [ADDR_WIDTH-1:0] i_start_addr, i_o_size, i_stride,
 
     // Output coordinates
     output logic [ROW_COUNT-1:0] o_row_id,
@@ -27,11 +27,17 @@ module router_controller #(
     parameter int IDLE = 0;
     parameter int INIT = 1;
     parameter int OUTPUT_COORDINATE_GEN = 2;
-    parameter int TILE_COMPARISON = 3;
-    parameter int DATA_OUT = 4;
+    parameter int WRITE_STALL = 3;
+    parameter int TILE_COMPARISON = 4;
+    parameter int DATA_OUT = 5;
+    
 
     logic [2:0] state;
+    logic y_increment, x_increment;
+    logic done_coordinate_gen;
 
+    assign y_increment = o_o_y < (i_o_size * i_stride) - i_stride;
+    assign x_increment = o_o_x < (i_o_size * i_stride) - i_stride;
 
     always_ff @(posedge i_clk or negedge i_nrst) begin
         if (~i_nrst || i_reg_clear) begin
@@ -45,6 +51,7 @@ module router_controller #(
             o_tile_read_en <= 0;
             o_pop_en <= 0;
             o_reg_clear <= 0;
+            done_coordinate_gen <= 0;
         end else begin
             case (state)
                 IDLE: begin
@@ -60,18 +67,18 @@ module router_controller #(
                 end
                 OUTPUT_COORDINATE_GEN: begin
                     // Output feature map row counter
-                    if (o_o_y < i_o_size - 1) begin
-                        o_o_y <= o_o_y + 1;
+                    if (y_increment) begin
+                        o_o_y <= o_o_y + i_stride;
                     end else begin
                         o_o_y <= 0;
-                        if (o_o_x < i_o_size - 1) begin
-                            o_o_x <= o_o_x + 1;
+                        if (x_increment) begin
+                            o_o_x <= o_o_x + i_stride;
                             // Stall when row routers are busy
                             // Proceed to tile comparison
                         end else begin
                             o_o_x <= 0;
-                            o_done <= 1; // Proceed to tile comparison
-                            state <= TILE_COMPARISON;
+                            done_coordinate_gen <= 1; // Proceed to tile comparison
+                            state <= WRITE_STALL;
                             o_ag_en <= 0;
                         end
                     end
@@ -79,12 +86,14 @@ module router_controller #(
                     if (o_row_id == ROW_COUNT - 1) begin
                         o_row_id <= 0;
                         o_ag_en <= 0;
-                        state <= TILE_COMPARISON;
-                    end else begin
+                        state <= WRITE_STALL;
+                    end else if (x_increment || y_increment) begin
                         o_row_id <= o_row_id + 1;
                         o_ag_en <= 1;
-                        // Output feature map counter
                     end
+                end
+                WRITE_STALL: begin
+                    state <= TILE_COMPARISON;
                 end
 
                 /*
@@ -107,7 +116,8 @@ module router_controller #(
                     if (i_data_empty) begin
                         o_pop_en <= 0;
                         o_reg_clear <= 1;
-                        if (o_done) begin
+                        if (done_coordinate_gen) begin
+                            o_done <= 1;
                             state <= IDLE;
                         end else begin
                             state <= INIT;
@@ -119,7 +129,5 @@ module router_controller #(
             endcase
         end
     end
-
-
 
 endmodule

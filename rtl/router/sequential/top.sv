@@ -16,7 +16,7 @@ module top (
     // Address Generator Control signals
     // Soon remove i_o_x, i_o_y
     // Component should be able to generate its own coordinates
-    input logic [ADDR_WIDTH-1:0] i_o_x, i_o_y, i_i_size, i_o_size,
+    input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride,
 
     output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data
 );
@@ -24,6 +24,7 @@ module top (
     localparam int ADDR_WIDTH = 8;
     localparam int ROUTER_COUNT = 3;
     localparam int DATA_WIDTH = 8;
+    localparam int ADDR_LENGTH = 9;
 
     sram #(
         .ADDR_WIDTH(ADDR_WIDTH),
@@ -62,26 +63,7 @@ module top (
         .o_data_addr(tr_data_addr)
     );
 
-    
-
-    // eventually remove this and replace with a higher level component
-    // row_router_controller #(
-    //     .ROUTER_COUNT(ROUTER_COUNT),
-    //     .ADDR_WIDTH(ADDR_WIDTH)
-    // ) row_router_controller_inst (
-    //     .i_clk(i_clk),
-    //     .i_nrst(i_nrst),
-    //     .i_reg_clear(i_reg_clear),
-    //     .i_en(i_en),
-    //     .i_o_x(i_o_x),
-    //     .i_o_y(i_o_y),
-    //     .i_o_size(i_o_size),
-    //     .o_x(o_x),
-    //     .o_y(o_y),
-    //     .o_rr_en(o_rr_en)
-    // );
-
-    logic [ROUTER_COUNT-1:0] row_id;
+    logic [ROUTER_COUNT-1:0] row_id, router_row_id;
     logic [ADDR_WIDTH-1:0] o_x, o_y;
     logic ag_en, ac_en, tile_read_en, pop_en, router_reg_clear;
 
@@ -95,6 +77,7 @@ module top (
         .i_reg_clear(i_reg_clear),
         .i_start_addr(i_start_addr),
         .i_o_size(i_o_size),
+        .i_stride(i_stride),
         .o_row_id(row_id),
         .o_o_x(o_x),
         .o_o_y(o_y),
@@ -108,6 +91,27 @@ module top (
         .o_reg_clear(router_reg_clear)
     );
 
+    logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
+    logic ag_valid;
+    address_generator #(
+        .ROW_COUNT(ROUTER_COUNT),
+        .ADDR_WIDTH(ADDR_WIDTH),
+        .ADDR_LENGTH(ADDR_LENGTH),
+        .KERNEL_SIZE(3)
+    ) address_gen (
+        .i_clk(i_clk),
+        .i_nrst(i_nrst),
+        .i_en(ag_en),
+        .i_reg_clear(router_reg_clear),
+        .i_o_x(o_x),
+        .i_o_y(o_y),
+        .i_i_size(i_i_size),
+        .i_start_addr(i_start_addr),
+        .o_valid(ag_valid),
+        .o_addr(ag_addr),
+        .i_row_id(row_id),
+        .o_row_id(router_row_id)
+    );
 
     logic router_addr_empty, router_data_empty;
 
@@ -132,11 +136,9 @@ module top (
         .i_ag_en(ag_en),
         .i_ac_en(ac_en),
         .i_miso_pop_en(pop_en),
-        .i_o_x(o_x),
-        .i_o_y(o_y),
-        .i_i_size(i_i_size),
-        .i_start_addr(i_start_addr),
-        .i_row_id(row_id),
+        .i_ag_addr(ag_addr),
+        .i_ag_valid(ag_valid),
+        .i_row_id(router_row_id),
         .i_data(sram_data_out),
         .i_addr(tr_data_addr),
         .i_data_valid(sram_data_out_valid),

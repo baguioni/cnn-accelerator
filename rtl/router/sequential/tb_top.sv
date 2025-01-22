@@ -10,7 +10,7 @@ module tb_top;
     // Signals
     logic i_clk, i_nrst, i_en, i_reg_clear, i_sram_write_en;
     logic [DATA_WIDTH-1:0] i_data_in;
-    logic [ADDR_WIDTH-1:0] i_write_addr, i_start_addr, i_addr_end, i_o_x, i_o_y, i_i_size, i_o_size;
+    logic [ADDR_WIDTH-1:0] i_write_addr, i_start_addr, i_addr_end, i_i_size, i_o_size, i_stride;
     logic o_read_done, i_miso_pop_en, o_route_done;
 
     // File-related variables
@@ -30,10 +30,9 @@ module tb_top;
         .i_addr_end(i_addr_end),
         .o_read_done(o_read_done),
         .o_route_done(o_route_done),
-        .i_o_x(i_o_x),
-        .i_o_y(i_o_y),
         .i_i_size(i_i_size),
-        .i_o_size(i_o_size)
+        .i_o_size(i_o_size),
+        .i_stride(i_stride)
     );
 
     // Clock generation
@@ -54,10 +53,9 @@ module tb_top;
         i_data_in = 0;
         i_start_addr = 0;
         i_addr_end = 0;
-        i_i_size = 5; // Example input size
-        i_o_size = 3; // Example output size
-        i_o_x = 0;
-        i_o_y = 0;
+        i_i_size = 4; // Example input size
+        i_o_size = 2; // Example output size
+        i_stride = 1;
         // Reset
         #10;
         i_nrst = 1;

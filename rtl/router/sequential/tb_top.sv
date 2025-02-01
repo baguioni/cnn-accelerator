@@ -53,9 +53,9 @@ module tb_top;
         i_data_in = 0;
         i_start_addr = 0;
         i_addr_end = 0;
-        i_i_size = 4; // Example input size
+        i_i_size = 5; // Example input size
         i_o_size = 2; // Example output size
-        i_stride = 1;
+        i_stride = 2;
         // Reset
         #10;
         i_nrst = 1;

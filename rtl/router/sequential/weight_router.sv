@@ -97,7 +97,7 @@ module weight_router (
     logic fifo_pop_en;
 
     // assign fifo_pop_en = i_data_out_en & sram_read_done;
-    assign o_route_ready = sram_read_done;
+    assign o_route_ready = sram_read_done & ~sram_data_out_valid;
 
     // Read from MISO FIFO and handle reuse 
     always_ff @(posedge i_clk or negedge i_nrst) begin

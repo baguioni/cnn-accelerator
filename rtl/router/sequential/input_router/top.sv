@@ -18,11 +18,11 @@ module input_router (
     // Component should be able to generate its own coordinates
     input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride,
 
-    output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data
+    output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data,
 
     // Upper level control signals
     input logic i_data_out_en,
-    output logic o_data_out_ready
+    output logic o_data_out_ready, o_rerouting
 );
     localparam int SRAM_DATA_WIDTH = 64;
     localparam int ADDR_WIDTH = 8;
@@ -94,7 +94,8 @@ module input_router (
         .i_data_empty(router_data_empty),
         .o_done(o_route_done),
         .o_reg_clear(router_reg_clear),
-        .o_data_out_ready(o_data_out_ready)
+        .o_data_out_ready(o_data_out_ready),
+        .o_rerouting(o_rerouting)
     );
 
     logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
@@ -141,7 +142,7 @@ module input_router (
         .i_reg_clear(router_reg_clear),
         .i_ag_en(ag_en),
         .i_ac_en(ac_en),
-        .i_miso_pop_en(pop_en),
+        .i_miso_pop_en(pop_en & i_data_out_en), // originally pop_en
         .i_ag_addr(ag_addr),
         .i_ag_valid(ag_valid),
         .i_row_id(router_row_id),

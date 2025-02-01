@@ -2,6 +2,7 @@
     Receives starting address and output size
     Outputs the output feature map coordinates
     Stalls when row routers are busy 
+    Should signal that is working on other coordinates
 */
 
 module input_router_controller #(
@@ -25,15 +26,14 @@ module input_router_controller #(
 
     // Status signals
     input logic i_addr_empty, i_data_empty,
-    output logic o_done, o_reg_clear, o_data_out_ready
+    output logic o_done, o_reg_clear, o_data_out_ready, o_rerouting
 );
     parameter int IDLE = 0;
     parameter int INIT = 1;
     parameter int OUTPUT_COORDINATE_GEN = 2;
     parameter int WRITE_STALL = 3;
     parameter int TILE_COMPARISON = 4;
-    parameter int DATA_OUT_STALL = 5;
-    parameter int DATA_OUT = 6;
+    parameter int DATA_OUT = 5;
     
 
     logic [2:0] state;
@@ -57,6 +57,7 @@ module input_router_controller #(
             o_reg_clear <= 0;
             done_coordinate_gen <= 0;
             o_data_out_ready <= 0;
+            o_rerouting <= 0;
         end else begin
             case (state)
                 IDLE: begin
@@ -66,6 +67,7 @@ module input_router_controller #(
                     end
                 end
                 INIT: begin
+                    o_rerouting <= 0;
                     o_ag_en <= 1;
                     o_reg_clear <= 0;
                     o_data_out_ready <= 0;
@@ -112,8 +114,9 @@ module input_router_controller #(
                     if (i_addr_empty) begin
                         o_tile_read_en <= 0;
                         o_ac_en <= 0;
-                        state <= DATA_OUT_STALL;
+                        state <= DATA_OUT;
                         o_data_out_ready <= 1;
+                        o_pop_en <= 1;
                     end else begin
                         o_tile_read_en <= 1;
                         o_ac_en <= 1;
@@ -123,11 +126,6 @@ module input_router_controller #(
                 /*
                     Signal to upper level control that data is ready
                 */
-                DATA_OUT_STALL: begin
-                    if (i_data_out_en) begin
-                        state <= DATA_OUT;
-                    end
-                end
 
                 DATA_OUT: begin
                     if (i_data_empty) begin
@@ -137,10 +135,12 @@ module input_router_controller #(
                             o_done <= 1;
                             state <= IDLE;
                         end else begin
+                            // Signal to tell weight router to reuse
+                            o_rerouting <= 1;
                             state <= INIT;
                         end
                         o_data_out_ready <= 0;
-                    end else begin
+                    end else if (i_data_out_en) begin
                         o_pop_en <= 1;
                     end
                 end

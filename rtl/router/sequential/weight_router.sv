@@ -3,7 +3,7 @@
     interface for controling weight router
 */
 
-module weight_top (
+module weight_router (
     input logic i_clk, i_nrst, i_reg_clear, i_fifo_clear,
     input logic i_sram_write_en, i_route_en, i_data_out_en, i_route_reuse,
 

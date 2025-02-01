@@ -4,7 +4,7 @@
     Stalls when row routers are busy 
 */
 
-module router_controller #(
+module input_router_controller #(
     parameter int ROW_COUNT = 4,
     parameter int ADDR_WIDTH = 8
 ) (

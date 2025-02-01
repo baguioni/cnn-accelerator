@@ -71,7 +71,7 @@ module input_router (
     logic [ADDR_WIDTH-1:0] o_x, o_y;
     logic ag_en, ac_en, tile_read_en, pop_en, router_reg_clear;
 
-    router_controller #(
+    input_router_controller #(
         .ROW_COUNT(ROUTER_COUNT),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) controller (
@@ -130,12 +130,12 @@ module input_router (
                 o_data_empty will be high
 
     */
-    router #(
+    row_group #(
         .ROUTER_COUNT(ROUTER_COUNT),
         .SRAM_DATA_WIDTH(SRAM_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(DATA_WIDTH)
-    ) router_inst (
+    ) row_group (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
         .i_reg_clear(router_reg_clear),

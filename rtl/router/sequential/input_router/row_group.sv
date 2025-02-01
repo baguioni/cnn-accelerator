@@ -4,7 +4,7 @@
     MPP - o_addr_empty should be high when done fetching all the addr/data
     MISO - o_data_empty should be high when done sending all the data
 */
-module router #(
+module row_group #(
     parameter int ROUTER_COUNT = 4,
     parameter int SRAM_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,

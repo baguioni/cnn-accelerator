@@ -1,7 +1,13 @@
 // Will have to add a control module to handle timing of operations
 // Or perhaps higher level operation does this and just waits for done signals
 // of each operation so that it can be timed with weight router
-module input_router (
+module input_router #(
+    parameter int SRAM_DATA_WIDTH = 64,
+    parameter int ADDR_WIDTH = 8,
+    parameter int ROUTER_COUNT = 4,
+    parameter int DATA_WIDTH = 8,
+    parameter int ADDR_LENGTH = 9
+)(
     input logic i_clk, i_nrst, i_en, i_reg_clear,
     input logic i_sram_write_en, 
 
@@ -19,17 +25,12 @@ module input_router (
     input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride,
 
     output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data,
+    output logic [ROUTER_COUNT-1:0] o_data_valid,
 
     // Upper level control signals
     input logic i_data_out_en,
     output logic o_data_out_ready, o_rerouting
 );
-    localparam int SRAM_DATA_WIDTH = 64;
-    localparam int ADDR_WIDTH = 8;
-    localparam int ROUTER_COUNT = 4;
-    localparam int DATA_WIDTH = 8;
-    localparam int ADDR_LENGTH = 9;
-
     sram #(
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(SRAM_DATA_WIDTH)
@@ -150,6 +151,7 @@ module input_router (
         .i_addr(tr_data_addr),
         .i_data_valid(sram_data_out_valid),
         .o_data(o_data),
+        .o_data_valid(o_data_valid),
         .o_data_empty(router_data_empty),
         .o_addr_empty(router_addr_empty)
     );

@@ -27,6 +27,7 @@ module row_group #(
     input logic i_data_valid,
 
     output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data,
+    output logic [ROUTER_COUNT-1:0] o_data_valid,
     output logic o_data_empty, o_addr_empty
 );
 
@@ -91,6 +92,7 @@ module row_group #(
     always_comb begin
         o_data_empty = &rr_data_empty;
         o_addr_empty = &rr_addr_empty;
+        o_data_valid = rr_data_valid;
     end
 
 

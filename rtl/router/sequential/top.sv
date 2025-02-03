@@ -21,12 +21,13 @@ module top (
     // Weight router parameters
     input logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset,
     input logic [ADDR_WIDTH-1:0] i_route_size
-
 );
+    localparam int DATA_WIDTH = 8;
     localparam int SRAM_DATA_WIDTH = 64;
     localparam int ADDR_WIDTH = 8;
     localparam int WEIGHT_SRAM = 0;
     localparam int INPUT_SRAM = 1;
+    localparam int ROUTER_COUNT = 4;
 
     logic sram_w_write_en, sram_i_write_en;
 
@@ -44,7 +45,9 @@ module top (
     logic wr_reroute;
 
     // Instantiate input router
-    input_router ir_inst (
+    input_router #(
+        .ROUTER_COUNT(ROUTER_COUNT)
+    ) ir_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
         .i_en(ir_en),
@@ -59,13 +62,20 @@ module top (
         .i_i_size(i_i_size),
         .i_o_size(i_o_size),
         .i_stride(i_stride),
-        .o_data(),
+        .o_data(ir_ifmap),
+        .o_data_valid(ir_data_valid),
         .i_data_out_en(ir_data_out_en),
         .o_data_out_ready(ir_route_ready),
         .o_rerouting(wr_reroute)
     );
 
     // Instantiate weight router
+    logic [DATA_WIDTH-1:0] weight;
+    logic wr_data_valid;
+    logic [ROUTER_COUNT-1:0] ir_data_valid;
+    logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] ir_ifmap;
+    logic [0:ROUTER_COUNT-1][DATA_WIDTH-1:0] s_ifmap;
+
     weight_router wr_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -82,8 +92,8 @@ module top (
         .i_route_size(i_route_size),
         .o_route_ready(wr_route_ready),
         .o_route_done(),
-        .o_data(),
-        .o_data_valid()
+        .o_data(weight),
+        .o_data_valid(wr_data_valid)
     );
 
     // Controller logic
@@ -125,4 +135,26 @@ module top (
         end
     end
 
+    // Systolic Array
+    genvar ii;
+    generate
+        for (ii=0; ii < ROUTER_COUNT; ii++) begin
+            assign s_ifmap[ii] = ir_ifmap[ii];
+        end
+    endgenerate
+
+    systolic_array #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .S_WIDTH(1),
+        .S_HEIGHT(ROUTER_COUNT)
+    ) systolic_array_inst (
+        .i_clk(i_clk),
+        .i_nrst(i_nrst),
+        .i_reg_clear(i_reg_clear || wr_reroute), // Need to add signals to clear only inputs
+        .i_pe_en(|ir_data_valid),
+        .i_psum_out_en(),
+        .i_ifmap(s_ifmap),
+        .i_weight(weight),
+        .o_ifmap()
+    );
 endmodule

@@ -4,13 +4,11 @@ module miso_fifo #(
     parameter int DATA_WIDTH = 8,
     parameter int DATA_LENGTH = 9,
     localparam ADDR_WIDTH = $clog2(DEPTH),
-    parameter int SA_BITS = 3,
     parameter int INDEX = 0
 )(
-    input logic i_clk, i_nrst, i_clear, i_write_en, i_pop_en,
+    input logic i_clk, i_nrst, i_clear, i_write_en, i_pop_en, i_r_pointer_reset,
     input logic [DATA_LENGTH-1:0][DATA_WIDTH-1:0] i_data,       
     input logic [DATA_LENGTH-1:0] i_valid,
-    input logic [SA_BITS-1:0] i_current_row,
     output logic [DATA_WIDTH-1:0] o_data,                          
     output logic o_empty, o_full, o_pop_valid       
 );
@@ -19,24 +17,6 @@ module miso_fifo #(
 
     logic write_en;
     assign write_en = i_write_en & !o_full;
-
-    // initial begin
-    //     $monitor("[%0t] [FIFO] i_write_en=%0b i_data=0x%0h i_pop_en=%0b o_data=0x%0h o_empty=%0b o_full=%0b",
-    //         $time, i_write_en, i_data, i_pop_en, o_data, o_empty, o_full);
-    // end
-
-    // Priority encoder logic - this might not be synthesizable
-
-    // logic [ADDR_WIDTH-1:0] index_offset;
-    // always_comb begin
-    //     index_offset = '0;
-    //     for (int i=0; i < DATA_LENGTH; i++) begin
-    //         if (i_valid[i] == 1'b1) begin
-    //         index_offset = ADDR_WIDTH'(i);
-    //         end
-    //     end      
-    // end
-
 
     // Write data
     always @ (posedge i_clk or negedge i_nrst) begin
@@ -56,7 +36,7 @@ module miso_fifo #(
 
     // Pop data
     always_ff @ (posedge i_clk or negedge i_nrst) begin
-        if (~i_nrst) begin
+        if (~i_nrst || i_r_pointer_reset) begin
             r_pointer <= 0;
             o_data <= 0;
             o_pop_valid <= 0;

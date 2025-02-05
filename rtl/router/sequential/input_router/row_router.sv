@@ -1,7 +1,7 @@
 module row_router #(
     parameter int SRAM_DATA_WIDTH = 64,
     parameter int DATA_WIDTH = 8,
-    parameter int DATA_LENGTH = 9,
+    parameter int ADDR_LENGTH = 9,
     parameter int ADDR_WIDTH = 8,
     parameter int KERNEL_SIZE = 3,
     parameter int PEEK_WIDTH = 8,
@@ -10,10 +10,11 @@ module row_router #(
     input logic i_clk, i_nrst, i_reg_clear,
 
     // Control signals
-    input logic i_ag_en, i_ac_en, i_miso_pop_en,
+    input logic i_mpp_write_en, i_ac_en, i_miso_pop_en,
 
     // Address generator related signals
-    input logic [ADDR_WIDTH-1:0] i_o_x, i_o_y, i_i_size, i_start_addr,
+    input [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] i_ag_addr,
+    input logic i_ag_valid,
 
     // Address comparator related signals
     input logic [SRAM_DATA_WIDTH-1:0] i_data,
@@ -22,51 +23,34 @@ module row_router #(
 
     // MISO FIFO related signals
     output logic [DATA_WIDTH-1:0] o_data,
-    output logic o_miso_empty, o_valid
+    output logic o_miso_empty, o_valid,
+
+    // MPP FIFO related signals
+    output logic o_mpp_empty
 );
     logic [PEEK_WIDTH-1:0] valid_data;
-    logic [0:DATA_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
-    logic ag_valid;
 
     // MISO - AC related signals
     logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] peek_addr;
     logic [PEEK_WIDTH-1:0] peek_valid;
 
-    // Address generator
-    address_generator #(
-        .ADDR_WIDTH(ADDR_WIDTH),
-        .DATA_LENGTH(DATA_LENGTH),
-        .KERNEL_SIZE(KERNEL_SIZE)
-    ) address_generator (
-        .i_clk(i_clk),
-        .i_nrst(i_nrst),
-        .i_en(i_ag_en),
-        .i_reg_clear(i_reg_clear),
-        .i_o_x(i_o_x),
-        .i_o_y(i_o_y),
-        .i_i_size(i_i_size),
-        .i_start_addr(i_start_addr),
-        .o_valid(ag_valid),
-        .o_addr(ag_addr)
-    );
-
     mpp_fifo #(
         .DEPTH(9),
         .DATA_WIDTH(ADDR_WIDTH),
-        .DATA_LENGTH(DATA_LENGTH),
+        .DATA_LENGTH(ADDR_LENGTH),
         .PEEK_WIDTH(PEEK_WIDTH)
     ) mpp_fifo (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
         .i_clear(i_reg_clear),
-        .i_write_en(ag_valid),
-        .i_data_in(ag_addr),
+        .i_write_en(i_mpp_write_en),
+        .i_data_in(i_ag_addr),
         .i_pop_en(ac_addr_hit[0]),
         .i_data_hit(ac_addr_hit),
         // .i_peek_en(i_peek_en),
         .o_peek_data(peek_addr),
         .o_peek_valid(peek_valid),
-        .o_empty(),
+        .o_empty(o_mpp_empty),
         .o_full()
     );
 
@@ -102,7 +86,6 @@ module row_router #(
         .i_pop_en(i_miso_pop_en),
         .i_data(ac_data_hit),
         .i_valid(ac_addr_hit),
-        .i_current_row(),
         .o_data(o_data),
         .o_empty(o_miso_empty),
         .o_full(),

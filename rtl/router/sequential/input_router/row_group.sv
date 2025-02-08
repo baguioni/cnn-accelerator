@@ -15,6 +15,7 @@ module row_group #(
 
     // Control signals
     input logic i_ag_en, i_ac_en, i_miso_pop_en,
+    input logic [1:0] i_p_mode,
 
     // Address generator related signals
     input logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] i_ag_addr,
@@ -81,6 +82,7 @@ module row_group #(
                 .i_data(i_data),
                 .i_data_valid(i_data_valid),
                 .i_addr(i_addr),
+                .i_p_mode(i_p_mode),
                 .o_data(o_data[ii]),
                 .o_miso_empty(rr_data_empty[ii]),
                 .o_valid(rr_data_valid[ii]),

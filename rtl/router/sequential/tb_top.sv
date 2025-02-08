@@ -13,6 +13,7 @@ module tb_top;
 
     // Signals
     logic i_clk, i_nrst, i_reg_clear, i_write_en, i_route_en;
+    logic [1:0] i_p_mode;
     logic [SRAM_DATA_WIDTH-1:0] i_data_in;
     logic [ADDR_WIDTH-1:0] i_write_addr;
     logic [ADDR_WIDTH-1:0] i_i_start_addr, i_i_addr_end;
@@ -25,6 +26,7 @@ module tb_top;
         .i_clk(i_clk),
         .i_nrst(i_nrst),
         .i_reg_clear(i_reg_clear),
+        .i_p_mode(i_p_mode),
         .i_data_in(i_data_in),
         .i_write_addr(i_write_addr),
         .i_sram_select(i_sram_select),
@@ -62,6 +64,7 @@ module tb_top;
         i_w_addr_offset = 1;
         i_route_size = 9;
         i_route_en = 0;
+        i_p_mode = 2'b01;
         #10;
         i_nrst = 1;
 

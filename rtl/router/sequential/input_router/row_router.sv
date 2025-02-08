@@ -22,6 +22,7 @@ module row_router #(
     input logic i_data_valid,
 
     // MISO FIFO related signals
+    input logic [1:0] i_p_mode,
     output logic [DATA_WIDTH-1:0] o_data,
     output logic o_miso_empty, o_valid,
 
@@ -84,6 +85,7 @@ module row_router #(
         .i_clear(i_reg_clear),
         .i_write_en(ac_addr_hit[0]),
         .i_pop_en(i_miso_pop_en),
+        .i_p_mode(i_p_mode),
         .i_data(ac_data_hit),
         .i_valid(ac_addr_hit),
         .o_data(o_data),

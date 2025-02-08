@@ -6,6 +6,7 @@
 module weight_router (
     input logic i_clk, i_nrst, i_reg_clear, i_fifo_clear,
     input logic i_sram_write_en, i_route_en, i_data_out_en, i_route_reuse,
+    input logic [1:0] i_p_mode,
 
     input logic [SRAM_DATA_WIDTH-1:0] i_data_in,
     input logic [ADDR_WIDTH-1:0] i_write_addr,
@@ -56,6 +57,7 @@ module weight_router (
         .i_clear(i_fifo_clear || i_reg_clear),
         .i_write_en(sram_data_out_valid),
         .i_pop_en(fifo_pop_en),
+        .i_p_mode(i_p_mode),
         .i_r_pointer_reset(i_route_reuse),
         .i_data(sram_data_out),
         .i_valid({DATA_LENGTH{sram_data_out_valid}}),

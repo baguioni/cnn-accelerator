@@ -9,6 +9,7 @@ module input_router #(
     parameter int ADDR_LENGTH = 9
 )(
     input logic i_clk, i_nrst, i_en, i_reg_clear,
+    input logic [1:0] i_p_mode,
     input logic i_sram_write_en, 
 
     // SRAM input signals
@@ -52,7 +53,6 @@ module input_router #(
 
 
     tile_reader #(
-        .DATA_WIDTH(SRAM_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) tile_reader_inst (
         .i_clk(i_clk),
@@ -144,6 +144,7 @@ module input_router #(
         .i_ag_en(ag_en),
         .i_ac_en(ac_en),
         .i_miso_pop_en(pop_en & i_data_out_en), // originally pop_en
+        .i_p_mode(i_p_mode),
         .i_ag_addr(ag_addr),
         .i_ag_valid(ag_valid),
         .i_row_id(router_row_id),

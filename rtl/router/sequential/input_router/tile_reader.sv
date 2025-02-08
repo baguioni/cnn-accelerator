@@ -1,5 +1,8 @@
+/*
+    Basically, this module is a simple counter 
+    that generates addresses for the buffer to read from.
+*/
 module tile_reader #(
-    parameter int DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8
 ) (
     input logic i_clk, i_nrst, 

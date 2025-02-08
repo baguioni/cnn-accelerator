@@ -13,6 +13,7 @@ module top (
     input logic [ADDR_WIDTH-1:0] i_write_addr,
     input logic [1:0] i_sram_select, // Select between weight and input SRAM
     input logic i_write_en, i_route_en,
+    input logic [1:0] i_p_mode,
 
     // Input router parameters
     input logic [ADDR_WIDTH-1:0] i_i_start_addr, i_i_addr_end,
@@ -53,6 +54,7 @@ module top (
         .i_en(ir_en),
         .i_reg_clear(i_reg_clear),
         .i_sram_write_en(sram_i_write_en),
+        .i_p_mode(i_p_mode),
         .i_data_in(i_data_in),
         .i_write_addr(i_write_addr),
         .i_start_addr(i_i_start_addr),
@@ -82,6 +84,7 @@ module top (
         .i_reg_clear(i_reg_clear),
         .i_fifo_clear(),
         .i_sram_write_en(sram_w_write_en),
+        .i_p_mode(i_p_mode),
         .i_route_en(wr_en),
         .i_data_out_en(wr_data_out_en),
         .i_route_reuse(wr_reroute),

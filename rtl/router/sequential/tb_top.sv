@@ -64,12 +64,12 @@ module tb_top;
         i_w_addr_offset = 1;
         i_route_size = 9;
         i_route_en = 0;
-        i_p_mode = 2'b01;
+        i_p_mode = 2'b10;
         #10;
         i_nrst = 1;
 
         // Write to weight SRAM
-        file = $fopen("sram.mem", "r");
+        file = $fopen("sram_i.mem", "r");
         if (file == 0) begin
             $display("Error opening file!");
             $finish;
@@ -93,7 +93,7 @@ module tb_top;
         $fclose(file);
 
         // Write to input SRAM
-        file = $fopen("sram.mem", "r");
+        file = $fopen("sram_i_2b.mem", "r");
         if (file == 0) begin
             $display("Error opening file!");
             $finish;

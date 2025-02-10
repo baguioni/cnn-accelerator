@@ -2,7 +2,7 @@
 module miso_fifo #(
     parameter int DEPTH = 32,  
     parameter int DATA_WIDTH = 8,
-    parameter int DATA_LENGTH = 9,
+    parameter int DATA_LENGTH = 8,
     localparam ADDR_WIDTH = $clog2(DEPTH),
     parameter int INDEX = 0
 )(
@@ -41,78 +41,94 @@ module miso_fifo #(
         end
     end
 
-    // Precision postprocessing
+    // Generate 4x4 data
+    logic [DATA_WIDTH-1:0] fb_data, fb_fifo;
+    logic last_data_4b;
+    assign last_data_4b = (r_pointer == w_pointer - 1);
 
-    logic [1:0] ctr;
-    logic [DATA_WIDTH-1:0] head, temp;
-    assign head = fifo[r_pointer];
+
+    always @(*) begin
+        if (o_empty) begin
+            fb_data = 0;
+        end else if (last_data_4b) begin
+            fb_data = fifo[r_pointer];
+        end else begin
+            fb_data = {fifo[r_pointer + 1][3:0], fifo[r_pointer][3:0]};
+        end
+    end
+
+    // Generate 2x2 data
+    logic [DATA_WIDTH-1:0] tb_data;
+    logic last_data_2b, llast_data_2b, lllast_data_2b;
+
+    assign last_data_2b = (r_pointer == w_pointer - 1);
+    assign llast_data_2b = (r_pointer == w_pointer - 2);
+    assign lllast_data_2b = (r_pointer == w_pointer - 3);
+
+    always @(*) begin
+        if (o_empty) begin
+            tb_data = 0;
+        end else if (last_data_2b) begin
+            tb_data = fifo[r_pointer];
+        end else if (llast_data_2b) begin
+            tb_data = {fifo[r_pointer + 1][1:0], fifo[r_pointer][1:0]};
+        end else if (lllast_data_2b) begin
+            tb_data = {fifo[r_pointer + 2][1:0], fifo[r_pointer + 1][1:0], fifo[r_pointer][1:0]};
+        end else begin
+            tb_data = {fifo[r_pointer + 3][1:0], fifo[r_pointer + 2][1:0], fifo[r_pointer + 1][1:0], fifo[r_pointer][1:0]};
+        end
+    end
+
     
     // Pop data
     always_ff @ (posedge i_clk or negedge i_nrst) begin
         if (~i_nrst || i_r_pointer_reset) begin
             r_pointer <= 0;
-            data_out <= 0;
-            temp <= 0;
-            data_out_valid <= 0;
-            ctr <= 0;
+            o_data <= 0;
+            o_pop_valid <= 0;
         end else if (i_clear) begin
             r_pointer <= 0;
-            data_out <= 0;
-            temp <= 0;
-            data_out_valid <= 0;
-            ctr <= 0;
+            o_data <= 0;
+            o_pop_valid <= 0;
         end else if (i_pop_en && !o_empty) begin
-            r_pointer <= r_pointer + 1;
             case (i_p_mode)
                 _8x8: begin
-                    data_out <= head;
-                    data_out_valid <= 1;
+                    o_data <= fifo[r_pointer];
+                    r_pointer <= r_pointer + 1;
+                    o_pop_valid <= 1;
                 end
                 _4x4: begin
-                    if (ctr == 2'b00) begin
-                        temp[3:0] <= head[3:0];
-                        ctr <= 2'b01;
-                        data_out_valid <= 0;
-                    end else if (ctr == 2'b01) begin
-                        data_out <= {head[3:0], temp[3:0]};
-                        temp <= 0;
-                        data_out_valid <= 1;
-                        ctr <= 0;
+                    o_data <= fb_data;
+                    if (last_data_4b) begin
+                        r_pointer <= r_pointer + 1;
+                    end else begin
+                        r_pointer <= r_pointer + 2;
                     end
+                    o_pop_valid <= 1;
                 end
                 _2x2: begin
-                    if (ctr == 2'b00) begin
-                        temp[1:0] <= head[1:0];
-                        ctr <= 2'b01;
-                        data_out_valid <= 0;
-                    end else if (ctr == 2'b01) begin
-                        temp[3:2] <= head[1:0];
-                        ctr <= 2'b10;
-                    end else if (ctr == 2'b10) begin
-                        temp[5:4] <= head[1:0];
-                        ctr <= 2'b11;
-                    end else if (ctr == 2'b11) begin
-                        data_out <= {head[1:0], temp[5:0]};
-                        data_out_valid <= 1;
-                        ctr <= 0;
+                    o_data <= tb_data;
+                    if (last_data_2b) begin
+                        r_pointer <= r_pointer + 1;
+                    end else if (llast_data_2b) begin
+                        r_pointer <= r_pointer + 2;
+                    end else if (lllast_data_2b) begin
+                        r_pointer <= r_pointer + 3;
+                    end else begin
+                        r_pointer <= r_pointer + 4;
                     end
-                end
-                default: begin
-                    data_out <= head;
-                    data_out_valid <= 0;
+                    o_pop_valid <= 1;
                 end
             endcase
-        end else if (o_empty && i_pop_en) begin
-            data_out <= temp;
-            data_out_valid <= 1;
+        end else begin
+            o_data <= 0;
+            o_pop_valid <= 0;
         end
     end
 
     // Status signals
     always_comb begin
-        o_full = (w_pointer + 1) == r_pointer;
+        o_full = (w_pointer == DEPTH - 1);
         o_empty = (w_pointer == r_pointer);
-        o_data = data_out;
-        o_pop_valid = data_out_valid;
     end
 endmodule

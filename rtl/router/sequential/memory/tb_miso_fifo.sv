@@ -3,7 +3,7 @@
 module miso_fifo_tb;
     parameter int DEPTH = 32;
     parameter int DATA_WIDTH = 8;
-    parameter int DATA_LENGTH = 9;
+    parameter int DATA_LENGTH = 8;
     
     logic i_clk, i_nrst, i_clear, i_write_en, i_pop_en, i_r_pointer_reset;
     logic [1:0] i_p_mode;
@@ -46,7 +46,7 @@ module miso_fifo_tb;
         i_write_en = 0;
         i_pop_en = 0;
         i_r_pointer_reset = 0;
-        i_p_mode = 2'b01; // _4x4 mode
+        i_p_mode = 2'b00; // _4x4 mode
         i_data = 0;
         i_valid = 0;
         
@@ -74,8 +74,30 @@ module miso_fifo_tb;
             i_data[3] = 8'h04; i_valid[3] = 1;
             i_data[4] = 8'h05; i_valid[4] = 1;
         #10 i_write_en = 0;
+        // #10 i_write_en = 1;
+        //     i_data[0] = 8'h06; i_valid[0] = 1;
+        //     i_data[1] = 8'h00; i_valid[1] = 0;
+        //     i_data[2] = 8'h00; i_valid[2] = 0;
+        //     i_data[3] = 8'h00; i_valid[3] = 0;
+        //     i_data[4] = 8'h00; i_valid[4] = 0;
+        // #10 i_write_en = 0;
         i_pop_en = 1;
-        #60 i_pop_en = 0;
+        #30 i_pop_en = 0;
+        i_clear = 1;
+        #10 i_clear = 0;
+        i_p_mode = 2'b10;
+        #10 i_write_en = 1;
+            i_data[0] = 8'h01; i_valid[0] = 1;
+            i_data[1] = 8'h01; i_valid[1] = 1;
+            i_data[2] = 8'h01; i_valid[2] = 1;
+            i_data[3] = 8'h01; i_valid[3] = 1;
+            i_data[4] = 8'h01; i_valid[4] = 1;
+            i_data[5] = 8'h01; i_valid[5] = 1;
+            i_data[6] = 8'h01; i_valid[6] = 1;
+        #10 i_write_en = 0;
+        i_pop_en = 1;
+        #30 i_pop_en = 0;
+
         
         #100 $finish;
     end

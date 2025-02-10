@@ -106,6 +106,7 @@ module weight_router (
         if (~i_nrst) begin
             fifo_r_pointer <= 0;
             o_route_done <= 0;
+            fifo_pop_en <= 0;
         end else begin
             if (i_reg_clear || i_route_reuse) begin
                 fifo_r_pointer <= 0;

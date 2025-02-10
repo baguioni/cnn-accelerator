@@ -94,7 +94,7 @@ module mpp_fifo #(
     
     // Status signals
     always_comb begin
-        o_full = (w_pointer + 1) == r_pointer;
+        o_full = (w_pointer == DEPTH - 1);
         o_empty = (w_pointer == r_pointer);
     end
 endmodule

@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 
 module mFU (
-    input              clk, nrst,
-    input       [ 7:0] a, b,
-    input       [ 1:0] mode,
-    output reg  [15:0] p
+    input  logic        clk, nrst,
+    input  logic [ 7:0] a, b,
+    input  logic [ 1:0] mode,
+    output logic [15:0] p
 );
     localparam NOOP = 2'b00;
     localparam _8x8 = 2'b01;
@@ -12,7 +12,7 @@ module mFU (
     localparam _2x2 = 2'b11;
 
     // Enable signal generaion
-    reg [15:0] en;
+    logic [15:0] en;
     always @(*) begin
         case (mode)
             _8x8: en = 16'b1111_1111_1111_1111;
@@ -23,7 +23,7 @@ module mFU (
     end
     
     // Select signal generation
-    reg [31:0] sel;
+    logic [31:0] sel;
     always @(*) begin
         case (mode)
             _8x8: sel = 32'b11100100_10100000_01000100_00000000;
@@ -34,10 +34,10 @@ module mFU (
     end
 
     // Internal signal for partial products
-    wire [3:0] p0_ll, p0_hl, p0_lh, p0_hh;
-    wire [3:0] p1_ll, p1_hl, p1_lh, p1_hh;
-    wire [3:0] p2_ll, p2_hl, p2_lh, p2_hh;
-    wire [3:0] p3_ll, p3_hl, p3_lh, p3_hh;
+    logic [3:0] p0_ll, p0_hl, p0_lh, p0_hh;
+    logic [3:0] p1_ll, p1_hl, p1_lh, p1_hh;
+    logic [3:0] p2_ll, p2_hl, p2_lh, p2_hh;
+    logic [3:0] p3_ll, p3_hl, p3_lh, p3_hh;
 
     // Instantiate mBB blocks (16 blocks computing 2bx2b products)
     mBB mbb_0_hh(.en(en[15]), .a(a[7:6]), .b(b[7:6]), .sel(sel[31:30]), .p(p0_hh));
@@ -61,7 +61,7 @@ module mFU (
     mBB mbb_3_ll(.en(en[ 0]), .a(a[1:0]), .b(b[1:0]), .sel(sel[ 1: 0]), .p(p3_ll));
 
     // Partial product accumulation. (4 blocks computing 4bx4b products)
-    wire signed [7:0] p0, p1, p2, p3;
+    logic signed [7:0] p0, p1, p2, p3;
     assign p0 = {p0_hh,p0_ll} + { { {2{p0_hl[3]}} , p0_hl } + { {2{p0_lh[3]}} , p0_lh } , 2'b00};
     assign p1 = {p1_hh,p1_ll} + { { {2{p1_hl[3]}} , p1_hl } + { {2{p1_lh[3]}} , p1_lh } , 2'b00};
     assign p2 = {p2_hh,p2_ll} + { { {2{p2_hl[3]}} , p2_hl } + { {2{p2_lh[3]}} , p2_lh } , 2'b00};
@@ -73,8 +73,8 @@ module mFU (
         end else begin
             case (mode)
                 _8x8:    p <= { p0, p3 } +  { { {4{p1[7]}} , p1 } + { {4{p2[7]}} , p2 } , 4'b0000 };
-                _4x4:    p <= { p0, p3 };
-                _2x2:    p <= { p0_hh, p0_ll, p3_hh, p3_ll };
+                _4x4:    p <= {{8{p0[7]}},p0} + {{8{p3[7]}},p3};
+                _2x2:    p <= {{12{p0_hh[3]}},p0_hh} + {{12{p0_ll[3]}},p0_ll} + {{12{p3_hh[3]}},p3_hh} + {{12{p0_ll[3]}},p3_ll};
                 default: p <= 16'h0;
             endcase
         end

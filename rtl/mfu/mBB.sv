@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 
-module HA (input  a, b, output s, c );
+module HA (input logic a, b, output logic s, c );
     assign s = a ^ b;
     assign c = a & b;
 endmodule
 
 module mBB (
-    input            en,
-    input      [1:0] a, b, sel,
-    output reg [3:0] p
+    input  logic       en,
+    input  logic [1:0] a, b, sel,
+    output logic [3:0] p
 );
     // Mode Selection (U - unsigned, S - signed)
     localparam UxU = 2'b00;
@@ -16,15 +16,15 @@ module mBB (
     localparam SxU = 2'b10;
     localparam SxS = 2'b11;
 
-    wire [1:0] ai, bi;
-    wire [3:0] pi;
+    logic [1:0] ai, bi;
+    logic [3:0] pi;
 
     // Input reassignment to save logic for UxS and SxU
     assign ai = (!en)? 0 : (sel==UxS)? b : a;
     assign bi = (!en)? 0 : (sel==UxS)? a : b;
 
     // Partial products
-    wire [1:0] pp0, pp1;
+    logic [1:0] pp0, pp1;
     
     assign pp0 = { (ai[1] & bi[0]), (ai[0] & bi[0]) };
     assign pp1 = { (ai[1] & bi[1]), (ai[0] & bi[1]) };
@@ -33,7 +33,7 @@ module mBB (
     assign pi[0] = pp0[0];
 
     // p1
-    wire HA_p1_co;
+    logic HA_p1_co;
     HA HA_p1(
         .a((sel==0)? pp0[1] : ~pp0[1]),
         .b((sel==0)? pp1[0] : ~pp1[0]),
@@ -41,13 +41,13 @@ module mBB (
         .s(pi[1]));
 
     // p2
-    wire HA_p2_1_co, HA_p2_1_s;
+    logic HA_p2_1_co, HA_p2_1_s;
     HA HA_p2_1(
         .a(1'b1),
         .b(pp1[1]),
         .c(HA_p2_1_co),
         .s(HA_p2_1_s));
-    wire HA_p2_0_a, p3_0;
+    logic HA_p2_0_a, p3_0;
     assign HA_p2_0_a = (sel==0)? pp1[1] : HA_p2_1_s;
     HA HA_p2_0(
         .a(HA_p2_0_a),

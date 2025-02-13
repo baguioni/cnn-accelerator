@@ -2,18 +2,18 @@
 
 module tb_mFU;
 
-reg                clk, nrst;
-reg  signed [ 7:0] a, b;
-reg         [ 1:0] mode;
-wire        [15:0] p;
+logic               clk, nrst;
+logic signed [ 7:0] a, b;
+logic        [ 1:0] mode;
+logic        [15:0] p;
 
-wire signed [ 3:0] ah, al, bh, bl;
-wire signed [ 1:0] ahh, ahl, alh, all;
-wire signed [ 1:0] bhh, bhl, blh, bll;
+logic signed [ 3:0] ah, al, bh, bl;
+logic signed [ 1:0] ahh, ahl, alh, all;
+logic signed [ 1:0] bhh, bhl, blh, bll;
 
-wire signed [15:0] ps;
-wire signed [ 7:0] ph,pl;
-wire signed [ 3:0] phh,phl,plh,pll;
+logic signed [15:0] ps;
+logic signed [ 7:0] ph,pl;
+logic signed [ 3:0] phh,phl,plh,pll;
 
 assign ah = a[7:4];
 assign al = a[3:0];

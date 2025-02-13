@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 
 module tb_mBB;
-reg        clk,en;
-reg  [1:0] a,b,sel;
-wire [3:0] p;
+logic       clk,en;
+logic [1:0] a,b,sel;
+logic [3:0] p;
 
 mBB uut (
     .en(en),
@@ -40,7 +40,7 @@ initial begin
         end
     end
 
-    $finish(2);
+    $finish;
 end
 
 endmodule

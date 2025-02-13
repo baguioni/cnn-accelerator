@@ -7,7 +7,7 @@ module tb_systolic_array;
 
     logic i_clk, i_nrst, i_reg_clear, i_pe_en, i_psum_out_en;
 
-
+    logic [1:0] i_mode;
     logic [0:S_HEIGHT-1][D_WIDTH-1:0] i_ifmap;
     logic [0:S_WIDTH-1][D_WIDTH-1:0] i_weight;
     logic [0:S_HEIGHT-1][D_WIDTH*2-1:0] o_ifmap;
@@ -23,6 +23,7 @@ module tb_systolic_array;
         .i_pe_en(i_pe_en),
         .i_relu_en(1'b0),
         .i_psum_out_en(i_psum_out_en),
+        .i_mode(i_mode),
         .i_ifmap(i_ifmap),
         .i_weight(i_weight),
         .o_ifmap(o_ifmap)
@@ -41,6 +42,7 @@ module tb_systolic_array;
         i_reg_clear = 0;
         i_pe_en = 0;
         i_psum_out_en = 0;
+        i_mode = 0;
         i_ifmap[0] = 8'h00;
         i_ifmap[1] = 8'h00;
         i_weight[0] = 8'h00; 
@@ -55,6 +57,7 @@ module tb_systolic_array;
 
         #20;
     
+        i_mode = 2'b11;
         i_ifmap[0] = 8'h01;
         i_ifmap[1] = 8'h00;
         i_weight[0] = 8'h01; 

@@ -49,19 +49,13 @@ module address_comparator #(
         if (i_en) begin
             for (int i = 0; i < SRAM_N; i++) begin
                 for (int j = 0; j < PEEK_WIDTH; j++) begin
-                    addr_hit[j] = 0;
-                    data_hit[j] = 0;
-                end
-            end
-
-            for (int i = 0; i < SRAM_N; i++) begin
-                for (int j = 0; j < PEEK_WIDTH; j++) begin
                     if ((sram_addr[i] == peek_addr[j]) & peek_valid[j]) begin
                         addr_hit[j] = 1;
                         data_hit[j] = sram_data[i];
                     end
                 end
             end
+
         end else begin
             for (int i = 0; i < PEEK_WIDTH; i++) begin
                 addr_hit[i] = 0;

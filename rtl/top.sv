@@ -28,7 +28,7 @@ module top (
     localparam int ADDR_WIDTH = 8;
     localparam int WEIGHT_SRAM = 0;
     localparam int INPUT_SRAM = 1;
-    localparam int ROUTER_COUNT = 4;
+    localparam int ROUTER_COUNT = 8;
 
     logic sram_w_write_en, sram_i_write_en;
 
@@ -43,7 +43,7 @@ module top (
         end
     end
 
-    logic wr_reroute;
+    logic wr_reuse_en;
 
     // Instantiate input router
     input_router #(
@@ -60,15 +60,15 @@ module top (
         .i_start_addr(i_i_start_addr),
         .i_addr_end(i_i_addr_end),
         .o_read_done(),
-        .o_route_done(),
+        .o_done(ir_done),
         .i_i_size(i_i_size),
         .i_o_size(i_o_size),
         .i_stride(i_stride),
         .o_data(ir_ifmap),
         .o_data_valid(ir_data_valid),
-        .i_data_out_en(ir_data_out_en),
-        .o_data_out_ready(ir_route_ready),
-        .o_rerouting(wr_reroute)
+        .i_pop_en(ir_pop_en),
+        .o_ready(ir_ready),
+        .o_context_done(wr_reuse_en)
     );
 
     // Instantiate weight router
@@ -85,58 +85,46 @@ module top (
         .i_fifo_clear(),
         .i_sram_write_en(sram_w_write_en),
         .i_p_mode(i_p_mode),
-        .i_route_en(wr_en),
-        .i_data_out_en(wr_data_out_en),
-        .i_route_reuse(wr_reroute),
+        .i_en(wr_en),
+        .i_pop_en(wr_pop_en),
+        .i_reuse_en(wr_reuse_en),
         .i_data_in(i_data_in),
         .i_write_addr(i_write_addr),
         .i_start_addr(i_w_start_addr),
         .i_addr_offset(i_w_addr_offset),
         .i_route_size(i_route_size),
-        .o_route_ready(wr_route_ready),
-        .o_route_done(),
+        .o_ready(wr_ready),
+        .o_done(wr_done),
         .o_data(weight),
         .o_data_valid(wr_data_valid)
     );
 
-    // Controller logic
-    logic ir_route_ready, wr_route_ready;
-    logic ir_en, wr_en;
-    logic ir_data_out_en, wr_data_out_en;
+    logic ir_pop_en, wr_pop_en;
+    logic ir_ready, wr_ready;
+    logic psum_out_en, or_en;
+    logic ir_done, wr_done, or_done;
 
-    always_ff @(posedge i_clk or negedge i_nrst) begin
-        if (~i_nrst) begin
-            ir_en <= 0;
-            wr_en <= 0;
-        end else begin
-            if (i_reg_clear) begin
-                ir_en <= 0;
-                wr_en <= 0;
-            end else if(i_route_en) begin
-                ir_en <= 1;
-                wr_en <= 1;
-            end
-        end
-    end
-
-    // Pop when both routers are ready
-    always_ff @(posedge i_clk or negedge i_nrst) begin
-        if (~i_nrst) begin
-            ir_data_out_en <= 0;
-            wr_data_out_en <= 0;
-        end else begin
-            if (i_reg_clear) begin
-                ir_data_out_en <= 0;
-                wr_data_out_en <= 0;
-            end else if (ir_route_ready & wr_route_ready) begin
-                ir_data_out_en <= 1;
-                wr_data_out_en <= 1;
-            end else begin
-                ir_data_out_en <= 0;
-                wr_data_out_en <= 0;
-            end
-        end
-    end
+    top_controller #(
+        .ROUTER_COUNT(ROUTER_COUNT),
+        .ADDR_WIDTH(ADDR_WIDTH)
+    ) top_controller_inst (
+        .i_clk(i_clk),
+        .i_nrst(i_nrst),
+        .i_reg_clear(i_reg_clear),
+        .i_route_en(i_route_en),
+        .o_ir_en(ir_en),
+        .o_wr_en(wr_en),
+        .i_ir_ready(ir_ready),
+        .i_wr_ready(wr_ready),
+        .o_ir_pop_en(ir_pop_en),
+        .o_wr_pop_en(wr_pop_en),
+        .i_ir_done(ir_done),
+        .i_wr_done(wr_done),
+        .i_or_done(or_done),
+        .i_route_size(i_route_size),
+        .o_psum_out_en(psum_out_en),
+        .o_or_en(or_en)
+    );
 
     // Systolic Array
     genvar ii;
@@ -146,6 +134,10 @@ module top (
         end
     endgenerate
 
+    logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] ofmap;
+    // logic [0:ROUTER_COUNT-1] ofmap_valid;
+    logic [15:0] packed_ofmap;
+
     systolic_array #(
         .DATA_WIDTH(DATA_WIDTH),
         .S_WIDTH(1),
@@ -153,11 +145,28 @@ module top (
     ) systolic_array_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
-        .i_reg_clear(i_reg_clear || wr_reroute), // Need to add signals to clear only inputs
+        .i_mode(i_p_mode),
+        .i_reg_clear(i_reg_clear || or_done), // Need to add signals to clear only inputs
         .i_pe_en(|ir_data_valid),
-        .i_psum_out_en(),
+        .i_psum_out_en(psum_out_en),
         .i_ifmap(s_ifmap),
         .i_weight(weight),
-        .o_ifmap()
+        .o_ofmap(ofmap)
+    );
+
+    output_router #(
+        .SPAD_ADDR_WIDTH(ADDR_WIDTH),
+        .SPAD_DATA_WIDTH(16),
+        .ROUTER_COUNT(ROUTER_COUNT),
+        .DATA_WIDTH(DATA_WIDTH)
+    ) or_inst (
+        .i_clk(i_clk),
+        .i_nrst(i_nrst),
+        .i_en(or_en),
+        .i_ifmap(ofmap),
+        .i_valid({ROUTER_COUNT{1'b1}}),
+        .o_data_out(packed_ofmap),
+        .o_valid(),
+        .o_done(or_done)
     );
 endmodule

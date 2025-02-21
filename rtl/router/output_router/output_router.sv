@@ -12,7 +12,7 @@ module output_router #(
     input  logic [ROUTER_COUNT-1:0] i_valid,
 
     output logic [SPAD_DATA_WIDTH-1:0] o_data_out,
-    output logic o_valid
+    output logic o_valid, o_done
 );
     localparam EMPTY = MEMBER_CNT*GROUP_CNT - ROUTER_COUNT;
     
@@ -43,24 +43,38 @@ module output_router #(
         OUT
     } state;
 
+    logic reg_en;
+
     logic [$clog2(GROUP_CNT)-1:0] count;
     always_ff @(posedge i_clk) begin
         if (!i_nrst) begin
             state   <= IDLE;
             count   <= 0;
             o_valid <= 0;
+            reg_en <= 0;
+            o_done  <= 0;
 
             extended_ifmap <= 0;
             extended_valid <= 0;
         end else begin
             case (state)
                 IDLE: begin
-                    state   <= (i_en)? OUT:IDLE;
-                    count   <= 0;
-                    o_valid <= (i_en)? 1 : 0;
+                    if (i_en & ~o_done) begin
+                        state          <= OUT;
+                        o_valid        <= 1;
+                        extended_ifmap <= i_ifmap << (EMPTY * DATA_WIDTH * 2);
+                        extended_valid <= i_valid;
+                    end else begin
+                        state          <= IDLE;
+                        o_valid        <= 0;
+                        extended_ifmap <= 0;
+                        extended_valid <= 0;
+                        o_done         <= 0;
+                    end
 
-                    extended_ifmap <= (!i_en)? 0 : i_ifmap<<(EMPTY*DATA_WIDTH*2);
-                    extended_valid <= (!i_en)? 0 : i_valid;
+                    o_done <= 0;
+                    count <= 0;
+
                 end
                 OUT : begin
                     if (count < GROUP_CNT-1) begin
@@ -69,6 +83,7 @@ module output_router #(
                         state   <= IDLE;
                         count   <= 0;
                         o_valid <= 0;
+                        o_done  <= 1;
                         
                         extended_ifmap <= 0;
                         extended_valid <= 0;

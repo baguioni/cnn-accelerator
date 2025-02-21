@@ -21,7 +21,6 @@ module tb_systolic_array;
         .i_nrst(i_nrst),
         .i_reg_clear(i_reg_clear),
         .i_pe_en(i_pe_en),
-        .i_relu_en(1'b0),
         .i_psum_out_en(i_psum_out_en),
         .i_mode(i_mode),
         .i_ifmap(i_ifmap),
@@ -43,8 +42,8 @@ module tb_systolic_array;
         i_pe_en = 0;
         i_psum_out_en = 0;
         i_mode = 0;
-        i_ifmap[0] = 8'h00;
-        i_ifmap[1] = 8'h00;
+        i_ifmap[0]  = 8'h00;
+        i_ifmap[1]  = 8'h00;
         i_weight[0] = 8'h00; 
         i_weight[1] = 8'h00;
 
@@ -57,23 +56,23 @@ module tb_systolic_array;
 
         #20;
     
-        i_mode = 2'b11;
-        i_ifmap[0] = 8'h01;
-        i_ifmap[1] = 8'h00;
-        i_weight[0] = 8'h01; 
-        i_weight[1] = 8'h00;
+        i_mode = 2'b10;
+        i_ifmap[0]  = 8'h00;
+        i_ifmap[1]  = 8'h01;
+        i_weight[0] = 8'h00; 
+        i_weight[1] = 8'h01;
         i_pe_en = 1;
         #10;
-        i_ifmap[0] = 8'h02;
-        i_ifmap[1] = 8'h03;
-        i_weight[0] = 8'h03; 
-        i_weight[1] = 8'h02;
+        i_ifmap[0]  = 8'h03;
+        i_ifmap[1]  = 8'h02;
+        i_weight[0] = 8'h02; 
+        i_weight[1] = 8'h03;
         #10;
-        i_ifmap[0] = 8'h00;
-        i_ifmap[1] = 8'h04;
-        i_weight[0] = 8'h00; 
-        i_weight[1] = 8'h04;
-        #30;
+        i_ifmap[0]  = 8'h04;
+        i_ifmap[1]  = 8'h00;
+        i_weight[0] = 8'h04; 
+        i_weight[1] = 8'h00;
+        #20;
         i_pe_en = 0;
         #10;
         i_psum_out_en = 1;

@@ -5,7 +5,7 @@ module systolic_array #(
     parameter S_WIDTH = 2,
     parameter S_HEIGHT = 2
 ) (
-    input logic i_clk, i_nrst, i_reg_clear, i_pe_en, i_relu_en, i_psum_out_en,
+    input logic i_clk, i_nrst, i_reg_clear, i_pe_en, i_psum_out_en,
     input logic [1:0] i_mode,
     input logic [0:S_HEIGHT-1][DATA_WIDTH-1:0] i_ifmap, 
     input logic [0:S_WIDTH-1][DATA_WIDTH-1:0] i_weight,
@@ -48,7 +48,6 @@ module systolic_array #(
                     .i_psum(mat_C[j][i+1]),
                     .i_reg_clear(i_reg_clear),
                     .i_pe_en(i_pe_en),
-                    .i_relu_en(i_relu_en),
                     .i_psum_out_en(i_psum_out_en),
                     .o_ifmap(mat_A[j][i+1]),
                     .o_weight(mat_B[j+1][i]),

@@ -8,7 +8,7 @@ module sram # (
     output logic [DATA_WIDTH-1:0] o_data_out,
     output logic o_data_out_valid
 );
-    localparam DEPTH = ADDR_WIDTH * ADDR_WIDTH;
+    localparam DEPTH = (1<<ADDR_WIDTH);
     logic [DATA_WIDTH-1:0] buffer [DEPTH-1:0];
     logic [DATA_WIDTH-1:0] reg_data_out;
 

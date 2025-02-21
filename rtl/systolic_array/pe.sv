@@ -4,7 +4,6 @@ module pe #(
     parameter int DATA_WIDTH = 8
 ) (
     input logic i_clk, i_nrst, 
-
     input logic [1:0] i_mode,
 
     // Data Inputs 
@@ -15,8 +14,6 @@ module pe #(
 
     input logic i_reg_clear, // Clear register
     input logic i_pe_en,  // Enable PE to perform multiply-and-accumulate
-
-    input logic i_relu_en,
 
     // Enable one cycle after last computation to 
     // output partial sum to the next PE
@@ -29,7 +26,7 @@ module pe #(
 );
 
     logic [DATA_WIDTH-1:0] reg_ifmap, reg_weight;
-    logic [DATA_WIDTH*2-1:0] reg_psum, o_multiplier, relu_out;
+    logic [DATA_WIDTH*2-1:0] reg_psum, o_multiplier;
 
     always_ff @(posedge i_clk or negedge i_nrst) begin
         if (~i_nrst) begin
@@ -70,19 +67,9 @@ module pe #(
     end
 
     always_comb begin
-        if (reg_psum < 0) begin
-            relu_out = 0;
-        end else if (reg_psum >= 0 && reg_psum <= 6) begin
-            relu_out = reg_psum;
-        end else begin
-            relu_out = 6;
-        end
-    end
-
-    always_comb begin
         o_ifmap = reg_ifmap;
         o_weight = reg_weight;
-        o_ofmap = (!i_relu_en)? reg_psum : relu_out;
+        o_ofmap = reg_psum;
     end
 
 endmodule

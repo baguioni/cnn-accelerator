@@ -19,7 +19,7 @@ module miso_fifo #(
 
     logic data_out_valid;
     logic [DATA_WIDTH-1:0] data_out;
-    logic [ADDR_WIDTH-1:0] w_pointer, r_pointer;
+    logic [ADDR_WIDTH-1:0] w_pointer, r_pointer, w_offset;
     logic [DATA_WIDTH-1:0] fifo [DEPTH-1:0];
 
     logic write_en;
@@ -35,11 +35,21 @@ module miso_fifo #(
             for (int i = 0; i < DATA_LENGTH; i = i + 1) begin
                 if (i_valid[i] == 1) begin
                     fifo[w_pointer + i] <= i_data[i];
-                    w_pointer <= w_pointer + i + 1;
                 end 
+            end
+            w_pointer <= w_offset + w_pointer;
+        end
+    end
+
+    always_comb begin
+        if (write_en) begin
+            w_offset = 0;
+            for (int i = 0; i < DATA_LENGTH; i = i + 1) begin
+                w_offset = w_offset + i_valid[i];
             end
         end
     end
+
 
     // Generate 4x4 data
     logic [DATA_WIDTH-1:0] fb_data, fb_fifo;

@@ -32,11 +32,11 @@ module mpp_fifo #(
             w_pointer <= 0;
         end else if (i_write_en & !o_full & !write_done) begin
             for (int i = 0; i < DATA_LENGTH; i = i + 1) begin
-                // if (i_valid[i]) begin
                 fifo[w_pointer + i] <= i_data_in[i];
-                w_pointer <= w_pointer + i + 1;
-                // end
             end
+
+            // Assume all the write data is valid
+            w_pointer <= w_pointer + DATA_LENGTH;
         end
     end
 
@@ -64,10 +64,8 @@ module mpp_fifo #(
     always_ff @ (posedge i_clk or negedge i_nrst) begin
         if (~i_nrst) begin
             r_pointer <= 0;
-            write_done <= 0;
         end else if (i_clear) begin
             r_pointer <= 0;
-            write_done <= 0;
         end else if (i_pop_en & !o_empty & (w_pointer-r_pointer > pop_offset)) begin
             r_pointer <= r_pointer + pop_offset + 1;
         end

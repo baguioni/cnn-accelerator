@@ -38,10 +38,9 @@ module output_router #(
         end
     endgenerate
 
-    enum logic [1:0] {
-        IDLE,
-        OUT
-    } state;
+    localparam IDLE = 0;
+    localparam OUT  = 1;
+    logic state;
 
     logic [$clog2(GROUP_CNT)-1:0] count;
     always_ff @(posedge i_clk) begin

@@ -62,14 +62,17 @@ module mFU (
     mBB mbb_3_ll(.en(en[ 0]), .a(a[1:0]), .b(b[1:0]), .sel(sel[ 1: 0]), .p(p3_ll));
 
     // Partial product accumulation. (4 blocks computing 4bx4b products)
-    logic signed [7:0] p0, p1, p2, p3;
+    logic [7:0] p0, p1, p2, p3;
+    logic p1_lh_ex, p2_hl_ex;
     logic p3_hl_ex, p3_lh_ex;
+    assign p1_lh_ex = (mode==_8x8)? 0 : p1_lh[3];
+    assign p2_hl_ex = (mode==_8x8)? 0 : p2_hl[3];
     assign p3_hl_ex = (mode==_8x8)? 0 : p3_hl[3];
     assign p3_lh_ex = (mode==_8x8)? 0 : p3_lh[3];
 
     assign p0 = {p0_hh,p0_ll} + { { {2{p0_hl[3]}} , p0_hl } + { {2{p0_lh[3]}} , p0_lh } , 2'b00};
-    assign p1 = {p1_hh,p1_ll} + { { {2{p1_hl[3]}} , p1_hl } + { {2{p1_lh[3]}} , p1_lh } , 2'b00};
-    assign p2 = {p2_hh,p2_ll} + { { {2{p2_hl[3]}} , p2_hl } + { {2{p2_lh[3]}} , p2_lh } , 2'b00};
+    assign p1 = {p1_hh,p1_ll} + { { {2{p1_hl[3]}} , p1_hl } + { {2{p1_lh_ex}} , p1_lh } , 2'b00};
+    assign p2 = {p2_hh,p2_ll} + { { {2{p2_hl_ex}} , p2_hl } + { {2{p2_lh[3]}} , p2_lh } , 2'b00};
     assign p3 = {p3_hh,p3_ll} + { { {2{p3_hl_ex}} , p3_hl } + { {2{p3_lh_ex}} , p3_lh } , 2'b00};
 
     always @(*) begin
@@ -79,7 +82,7 @@ module mFU (
             case (mode)
                 _8x8:    p = { p0, p3 } +  { { {4{p1[7]}} , p1 } + { {4{p2[7]}} , p2 } , 4'b0000 };
                 _4x4:    p = {{8{p0[7]}},p0} + {{8{p3[7]}},p3};
-                _2x2:    p = {{12{p0_hh[3]}},p0_hh} + {{12{p0_ll[3]}},p0_ll} + {{12{p3_hh[3]}},p3_hh} + {{12{p0_ll[3]}},p3_ll};
+                _2x2:    p = {{12{p0_hh[3]}},p0_hh} + {{12{p0_ll[3]}},p0_ll} + {{12{p3_hh[3]}},p3_hh} + {{12{p3_ll[3]}},p3_ll};
                 default: p = 16'h0;
             endcase
         end

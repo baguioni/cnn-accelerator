@@ -63,10 +63,14 @@ module mFU (
 
     // Partial product accumulation. (4 blocks computing 4bx4b products)
     logic signed [7:0] p0, p1, p2, p3;
+    logic p3_hl_ex, p3_lh_ex;
+    assign p3_hl_ex = (mode==_8x8)? 0 : p3_hl[3];
+    assign p3_lh_ex = (mode==_8x8)? 0 : p3_lh[3];
+
     assign p0 = {p0_hh,p0_ll} + { { {2{p0_hl[3]}} , p0_hl } + { {2{p0_lh[3]}} , p0_lh } , 2'b00};
     assign p1 = {p1_hh,p1_ll} + { { {2{p1_hl[3]}} , p1_hl } + { {2{p1_lh[3]}} , p1_lh } , 2'b00};
     assign p2 = {p2_hh,p2_ll} + { { {2{p2_hl[3]}} , p2_hl } + { {2{p2_lh[3]}} , p2_lh } , 2'b00};
-    assign p3 = {p3_hh,p3_ll} + { { {2{p3_hl[3]}} , p3_hl } + { {2{p3_lh[3]}} , p3_lh } , 2'b00};
+    assign p3 = {p3_hh,p3_ll} + { { {2{p3_hl_ex}} , p3_hl } + { {2{p3_lh_ex}} , p3_lh } , 2'b00};
 
     always @(*) begin
         if (!nrst) begin

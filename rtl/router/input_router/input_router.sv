@@ -18,7 +18,7 @@ module input_router #(
 
     // Tile Reader Control signals
     input logic [ADDR_WIDTH-1:0] i_start_addr, i_addr_end,
-    output logic o_read_done, o_route_done,
+    output logic o_read_done, o_done,
 
     // Address Generator Control signals
     // Soon remove i_o_x, i_o_y
@@ -29,8 +29,8 @@ module input_router #(
     output logic [ROUTER_COUNT-1:0] o_data_valid,
 
     // Upper level control signals
-    input logic i_data_out_en,
-    output logic o_data_out_ready, o_rerouting
+    input logic i_pop_en,
+    output logic o_ready, o_context_done
 );
     sram #(
         .ADDR_WIDTH(ADDR_WIDTH),
@@ -72,7 +72,7 @@ module input_router #(
     logic [ADDR_WIDTH-1:0] o_x, o_y;
     logic ag_en, ac_en, tile_read_en, pop_en, router_reg_clear;
 
-    input_router_controller #(
+    ir_controller #(
         .ROW_COUNT(ROUTER_COUNT),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) controller (
@@ -80,7 +80,7 @@ module input_router #(
         .i_nrst(i_nrst),
         .i_en(i_en),
         .i_reg_clear(i_reg_clear),
-        .i_data_out_en(i_data_out_en),
+        .i_pop_en(i_pop_en),
         .i_start_addr(i_start_addr),
         .i_o_size(i_o_size),
         .i_stride(i_stride),
@@ -93,11 +93,13 @@ module input_router #(
         .o_pop_en(pop_en),
         .i_addr_empty(router_addr_empty),
         .i_data_empty(router_data_empty),
-        .o_done(o_route_done),
+        .o_done(),
         .o_reg_clear(router_reg_clear),
-        .o_data_out_ready(o_data_out_ready),
-        .o_rerouting(o_rerouting)
+        .o_ready(o_ready),
+        .o_context_done(o_context_done)
     );
+
+    assign o_done = pop_en;
 
     logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
     logic ag_valid;
@@ -143,7 +145,7 @@ module input_router #(
         .i_reg_clear(router_reg_clear),
         .i_ag_en(ag_en),
         .i_ac_en(ac_en),
-        .i_miso_pop_en(pop_en & i_data_out_en), // originally pop_en
+        .i_miso_pop_en(pop_en & i_pop_en), // originally pop_en
         .i_p_mode(i_p_mode),
         .i_ag_addr(ag_addr),
         .i_ag_valid(ag_valid),

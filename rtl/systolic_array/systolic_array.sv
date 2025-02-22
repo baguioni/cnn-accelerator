@@ -9,7 +9,7 @@ module systolic_array #(
     input logic [1:0] i_mode,
     input logic [0:S_HEIGHT-1][DATA_WIDTH-1:0] i_ifmap, 
     input logic [0:S_WIDTH-1][DATA_WIDTH-1:0] i_weight,
-    output logic [0:S_HEIGHT-1][DATA_WIDTH*2-1:0] o_ifmap
+    output logic [0:S_HEIGHT-1][DATA_WIDTH*2-1:0] o_ofmap
 );
     logic [0:S_HEIGHT-1][0:S_WIDTH][DATA_WIDTH-1:0] mat_A;
     logic [0:S_HEIGHT][0:S_WIDTH-1][DATA_WIDTH-1:0] mat_B;
@@ -20,7 +20,7 @@ module systolic_array #(
     generate
         for (jj=0; jj < S_HEIGHT; jj++) begin : y_ios
             assign mat_A[jj][0] = i_ifmap[jj]; 
-            assign o_ifmap[jj] = mat_C[jj][0];
+            assign o_ofmap[jj] = mat_C[jj][0];
         end
     endgenerate
 
@@ -45,7 +45,7 @@ module systolic_array #(
                     .i_mode(i_mode),
                     .i_ifmap(mat_A[j][i]),
                     .i_weight(mat_B[j][i]),
-                    .i_psum(mat_C[j][i+1]),
+                    // .i_psum(mat_C[j][i+1]),
                     .i_reg_clear(i_reg_clear),
                     .i_pe_en(i_pe_en),
                     .i_psum_out_en(i_psum_out_en),

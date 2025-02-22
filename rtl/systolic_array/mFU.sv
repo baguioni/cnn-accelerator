@@ -6,10 +6,11 @@ module mFU (
     input  logic [ 1:0] mode,
     output logic [15:0] p
 );
-    localparam NOOP = 2'b00;
-    localparam _8x8 = 2'b01;
-    localparam _4x4 = 2'b10;
-    localparam _2x2 = 2'b11;
+
+    localparam _8x8 = 2'b00;
+    localparam _4x4 = 2'b01;
+    localparam _2x2 = 2'b10;
+    localparam NOOP = 2'b11;
 
     // Enable signal generaion
     logic [15:0] en;
@@ -67,15 +68,15 @@ module mFU (
     assign p2 = {p2_hh,p2_ll} + { { {2{p2_hl[3]}} , p2_hl } + { {2{p2_lh[3]}} , p2_lh } , 2'b00};
     assign p3 = {p3_hh,p3_ll} + { { {2{p3_hl[3]}} , p3_hl } + { {2{p3_lh[3]}} , p3_lh } , 2'b00};
 
-    always @(posedge clk or negedge nrst) begin
+    always @(*) begin
         if (!nrst) begin
-            p <= 16'h0;
+            p = 16'h0;
         end else begin
             case (mode)
-                _8x8:    p <= { p0, p3 } +  { { {4{p1[7]}} , p1 } + { {4{p2[7]}} , p2 } , 4'b0000 };
-                _4x4:    p <= {{8{p0[7]}},p0} + {{8{p3[7]}},p3};
-                _2x2:    p <= {{12{p0_hh[3]}},p0_hh} + {{12{p0_ll[3]}},p0_ll} + {{12{p3_hh[3]}},p3_hh} + {{12{p0_ll[3]}},p3_ll};
-                default: p <= 16'h0;
+                _8x8:    p = { p0, p3 } +  { { {4{p1[7]}} , p1 } + { {4{p2[7]}} , p2 } , 4'b0000 };
+                _4x4:    p = {{8{p0[7]}},p0} + {{8{p3[7]}},p3};
+                _2x2:    p = {{12{p0_hh[3]}},p0_hh} + {{12{p0_ll[3]}},p0_ll} + {{12{p3_hh[3]}},p3_hh} + {{12{p0_ll[3]}},p3_ll};
+                default: p = 16'h0;
             endcase
         end
     end

@@ -26,7 +26,7 @@ module pe #(
 );
 
     logic [DATA_WIDTH-1:0] reg_ifmap, reg_weight;
-    logic [DATA_WIDTH*2-1:0] reg_psum, o_multiplier;
+    logic [DATA_WIDTH*2-1:0] reg_psum, o_multiplier, reg_psum_out;
 
     always_ff @(posedge i_clk or negedge i_nrst) begin
         if (~i_nrst) begin
@@ -52,24 +52,33 @@ module pe #(
         .p(o_multiplier)
     );
 
+    // always_comb begin
+    //     o_multiplier = i_ifmap * i_weight;
+    // end
+
+    logic write_en;
+    assign write_en = i_pe_en & (reg_ifmap != 0 & reg_weight != 0);
+
     always_ff @(posedge i_clk or negedge i_nrst) begin
         if(~i_nrst) begin
             reg_psum <= 0;
+            reg_psum_out <= 0;
         end else begin
-            if (i_reg_clear) begin
+            if(i_psum_out_en) begin
+                reg_psum_out <= reg_psum;
+            end else if (i_reg_clear) begin
                 reg_psum <= 0;
+                reg_psum_out <= 0;
             end else if(i_pe_en) begin
                 reg_psum <= reg_psum + o_multiplier;
-            end else if(i_psum_out_en) begin
-                reg_psum <= i_psum;
-            end
+            end 
         end
     end
 
     always_comb begin
         o_ifmap = reg_ifmap;
         o_weight = reg_weight;
-        o_ofmap = reg_psum;
+        o_ofmap = reg_psum_out;
     end
 
 endmodule

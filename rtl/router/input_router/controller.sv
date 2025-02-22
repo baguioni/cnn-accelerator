@@ -5,14 +5,14 @@
     Should signal that is working on other coordinates
 */
 
-module input_router_controller #(
+module ir_controller #(
     parameter int ROW_COUNT = 4,
     parameter int ADDR_WIDTH = 8
 ) (
     input logic i_clk, i_nrst, i_en, i_reg_clear,
 
     // Input control signals
-    input logic i_data_out_en,
+    input logic i_pop_en,
 
     // Input parameters
     input logic [ADDR_WIDTH-1:0] i_start_addr, i_o_size, i_stride,
@@ -26,7 +26,7 @@ module input_router_controller #(
 
     // Status signals
     input logic i_addr_empty, i_data_empty,
-    output logic o_done, o_reg_clear, o_data_out_ready, o_rerouting
+    output logic o_done, o_reg_clear, o_ready, o_context_done
 );
     parameter int IDLE = 0;
     parameter int INIT = 1;
@@ -56,8 +56,8 @@ module input_router_controller #(
             o_pop_en <= 0;
             o_reg_clear <= 0;
             done_coordinate_gen <= 0;
-            o_data_out_ready <= 0;
-            o_rerouting <= 0;
+            o_ready <= 0;
+            o_context_done <= 0;
         end else begin
             case (state)
                 IDLE: begin
@@ -67,10 +67,10 @@ module input_router_controller #(
                     end
                 end
                 INIT: begin
-                    o_rerouting <= 0;
+                    o_context_done <= 0;
                     o_ag_en <= 1;
                     o_reg_clear <= 0;
-                    o_data_out_ready <= 0;
+                    o_ready <= 0;
                     state <= OUTPUT_COORDINATE_GEN;
                 end
                 OUTPUT_COORDINATE_GEN: begin
@@ -115,7 +115,7 @@ module input_router_controller #(
                         o_tile_read_en <= 0;
                         o_ac_en <= 0;
                         state <= DATA_OUT;
-                        o_data_out_ready <= 1;
+                        o_ready <= 1;
                         o_pop_en <= 1;
                     end else begin
                         o_tile_read_en <= 1;
@@ -136,11 +136,11 @@ module input_router_controller #(
                             state <= IDLE;
                         end else begin
                             // Signal to tell weight router to reuse
-                            o_rerouting <= 1;
+                            o_context_done <= 1;
                             state <= INIT;
                         end
-                        o_data_out_ready <= 0;
-                    end else if (i_data_out_en) begin
+                        o_ready <= 0;
+                    end else if (i_pop_en) begin
                         o_pop_en <= 1;
                     end
                 end

@@ -18,7 +18,7 @@ module top #(
     // Host-side 
     input logic [SRAM_DATA_WIDTH-1:0] i_data_in,
     input logic [ADDR_WIDTH-1:0] i_write_addr,
-    input logic [1:0] i_sram_select, // Select between weight and input SRAM
+    input logic [1:0] i_spad_select, // Select between weight and input SRAM
     input logic i_write_en, i_route_en,
     input logic [1:0] i_p_mode,
 
@@ -30,16 +30,16 @@ module top #(
     input logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset,
     input logic [ADDR_WIDTH-1:0] i_route_size
 );
-    logic sram_w_write_en, sram_i_write_en;
+    logic spad_w_write_en, spad_i_write_en;
 
     // Select which SRAM to write to
     always_comb begin
-        if (i_sram_select == WEIGHT_SRAM) begin
-            sram_w_write_en = i_write_en;
-            sram_i_write_en = 0;
-        end else if (i_sram_select == INPUT_SRAM) begin
-            sram_w_write_en = 0;
-            sram_i_write_en = i_write_en;
+        if (i_spad_select == WEIGHT_SRAM) begin
+            spad_w_write_en = i_write_en;
+            spad_i_write_en = 0;
+        end else if (i_spad_select == INPUT_SRAM) begin
+            spad_w_write_en = 0;
+            spad_i_write_en = i_write_en;
         end
     end
 
@@ -78,7 +78,7 @@ module top #(
         .i_nrst(i_nrst),
         .i_en(ir_en),
         .i_reg_clear(i_reg_clear),
-        .i_sram_write_en(sram_i_write_en),
+        .i_spad_write_en(spad_i_write_en),
         .i_p_mode(i_p_mode),
         .i_data_in(i_data_in),
         .i_write_addr(i_write_addr),
@@ -101,7 +101,7 @@ module top #(
         .i_nrst(i_nrst),
         .i_reg_clear(i_reg_clear),
         .i_fifo_clear(),
-        .i_sram_write_en(sram_w_write_en),
+        .i_spad_write_en(spad_w_write_en),
         .i_p_mode(i_p_mode),
         .i_en(wr_en),
         .i_pop_en(wr_pop_en),

@@ -52,7 +52,7 @@ module input_router #(
     spad #(
         .DEPTH(SPAD_DEPTH),
         .ADDR_WIDTH(ADDR_WIDTH),
-        .DATA_WIDTH(SPAD_DATA_WIDTH),
+        .DATA_WIDTH(SPAD_DATA_WIDTH)
     ) input_sram (
         .i_clk(i_clk),
         .i_write_en(i_spad_write_en),

@@ -2,7 +2,8 @@
 // Or perhaps higher level operation does this and just waits for done signals
 // of each operation so that it can be timed with weight router
 module input_router #(
-    parameter int SRAM_DATA_WIDTH = 64,
+    parameter int SPAD_DEPTH = 256,
+    parameter int SPAD_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,
     parameter int ROUTER_COUNT = 4,
     parameter int DATA_WIDTH = 8,
@@ -10,10 +11,10 @@ module input_router #(
 )(
     input logic i_clk, i_nrst, i_en, i_reg_clear,
     input logic [1:0] i_p_mode,
-    input logic i_sram_write_en, 
+    input logic i_spad_write_en, 
 
     // SRAM input signals
-    input logic [SRAM_DATA_WIDTH-1:0] i_data_in,
+    input logic [SPAD_DATA_WIDTH-1:0] i_data_in,
     input logic [ADDR_WIDTH-1:0] i_write_addr,
 
     // Tile Reader Control signals
@@ -21,8 +22,6 @@ module input_router #(
     output logic o_read_done, o_done,
 
     // Address Generator Control signals
-    // Soon remove i_o_x, i_o_y
-    // Component should be able to generate its own coordinates
     input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride,
 
     output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data,
@@ -32,25 +31,38 @@ module input_router #(
     input logic i_pop_en,
     output logic o_ready, o_context_done
 );
-    sram #(
+    // SPAD related signals
+    logic [SPAD_DATA_WIDTH-1:0] spad_data_out;
+    logic spad_data_out_valid;
+    logic [ADDR_WIDTH-1:0] spad_read_addr, tr_data_addr;
+    logic spad_read_en, tr_valid_addr;
+
+    // Controller related signals
+    logic [ROUTER_COUNT-1:0] row_id, router_row_id;
+    logic [ADDR_WIDTH-1:0] o_x, o_y;
+    logic ag_en, ac_en, tile_read_en, pop_en, router_reg_clear;
+
+    // Address Generator related signals
+    logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
+    logic ag_valid;
+
+    // Row Group related signals
+    logic router_addr_empty, router_data_empty;
+
+    spad #(
+        .DEPTH(SPAD_DEPTH),
         .ADDR_WIDTH(ADDR_WIDTH),
-        .DATA_WIDTH(SRAM_DATA_WIDTH)
+        .DATA_WIDTH(SPAD_DATA_WIDTH),
     ) input_sram (
         .i_clk(i_clk),
-        .i_write_en(i_sram_write_en),
-        .i_read_en(sram_read_en),
+        .i_write_en(i_spad_write_en),
+        .i_read_en(spad_read_en),
         .i_data_in(i_data_in),
         .i_write_addr(i_write_addr),
-        .i_read_addr(sram_read_addr),
-        .o_data_out(sram_data_out),
-        .o_data_out_valid(sram_data_out_valid)
+        .i_read_addr(spad_read_addr),
+        .o_data_out(spad_data_out),
+        .o_data_out_valid(spad_data_out_valid)
     );
-
-    logic [SRAM_DATA_WIDTH-1:0] sram_data_out;
-    logic sram_data_out_valid;
-    logic [ADDR_WIDTH-1:0] sram_read_addr, tr_data_addr;
-    logic sram_read_en, tr_valid_addr;
-
 
     tile_reader #(
         .ADDR_WIDTH(ADDR_WIDTH)
@@ -61,16 +73,12 @@ module input_router #(
         .i_reg_clear(router_reg_clear),
         .i_start_addr(i_start_addr),
         .i_addr_end(i_addr_end),
-        .o_buf_read_en(sram_read_en),
+        .o_buf_read_en(spad_read_en),
         .o_read_done(o_read_done),
         .o_valid_addr(tr_valid_addr),
-        .o_read_addr(sram_read_addr),
+        .o_read_addr(spad_read_addr),
         .o_data_addr(tr_data_addr)
     );
-
-    logic [ROUTER_COUNT-1:0] row_id, router_row_id;
-    logic [ADDR_WIDTH-1:0] o_x, o_y;
-    logic ag_en, ac_en, tile_read_en, pop_en, router_reg_clear;
 
     ir_controller #(
         .ROW_COUNT(ROUTER_COUNT),
@@ -99,10 +107,6 @@ module input_router #(
         .o_context_done(o_context_done)
     );
 
-    assign o_done = pop_en;
-
-    logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
-    logic ag_valid;
     address_generator #(
         .ROW_COUNT(ROUTER_COUNT),
         .ADDR_WIDTH(ADDR_WIDTH),
@@ -123,8 +127,6 @@ module input_router #(
         .o_row_id(router_row_id)
     );
 
-    logic router_addr_empty, router_data_empty;
-
     /*
         When routing data.
 
@@ -136,7 +138,7 @@ module input_router #(
     */
     row_group #(
         .ROUTER_COUNT(ROUTER_COUNT),
-        .SRAM_DATA_WIDTH(SRAM_DATA_WIDTH),
+        .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(DATA_WIDTH)
     ) row_group (
@@ -150,13 +152,15 @@ module input_router #(
         .i_ag_addr(ag_addr),
         .i_ag_valid(ag_valid),
         .i_row_id(router_row_id),
-        .i_data(sram_data_out),
+        .i_data(spad_data_out),
         .i_addr(tr_data_addr),
-        .i_data_valid(sram_data_out_valid),
+        .i_data_valid(spad_data_out_valid),
         .o_data(o_data),
         .o_data_valid(o_data_valid),
         .o_data_empty(router_data_empty),
         .o_addr_empty(router_addr_empty)
     );
+
+    assign o_done = pop_en;
 
 endmodule

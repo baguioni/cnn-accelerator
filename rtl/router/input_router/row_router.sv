@@ -1,5 +1,5 @@
 module row_router #(
-    parameter int SRAM_DATA_WIDTH = 64,
+    parameter int SPAD_DATA_WIDTH = 64,
     parameter int DATA_WIDTH = 8,
     parameter int ADDR_LENGTH = 9,
     parameter int ADDR_WIDTH = 8,
@@ -17,7 +17,7 @@ module row_router #(
     input logic i_ag_valid,
 
     // Address comparator related signals
-    input logic [SRAM_DATA_WIDTH-1:0] i_data,
+    input logic [SPAD_DATA_WIDTH-1:0] i_data,
     input logic [ADDR_WIDTH-1:0] i_addr,
     input logic i_data_valid,
 
@@ -34,6 +34,12 @@ module row_router #(
     // MISO - AC related signals
     logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] peek_addr;
     logic [PEEK_WIDTH-1:0] peek_valid;
+    
+    // Data to be sent to MPP
+    logic [PEEK_WIDTH-1:0] ac_addr_hit;
+
+    // Data to be stored in MISO
+    logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] ac_data_hit;
 
     mpp_fifo #(
         .DEPTH(9),
@@ -55,11 +61,6 @@ module row_router #(
         .o_full()
     );
 
-    // Data to be sent to MPP
-    logic [PEEK_WIDTH-1:0] ac_addr_hit;
-
-    // Data to be stored in MISO
-    logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] ac_data_hit;
 
     address_comparator #(
         .ADDR_WIDTH(ADDR_WIDTH),

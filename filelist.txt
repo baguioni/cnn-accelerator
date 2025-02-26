@@ -12,7 +12,7 @@ rtl/router/input_router/tile_reader.sv
 rtl/router/weight_router.sv
 rtl/router/fifo/miso_fifo.sv
 rtl/router/fifo/mpp_fifo.sv
-rtl/sram/sram.sv
+rtl/spad/spad.sv
 rtl/systolic_array/mBB.sv
 rtl/systolic_array/mFU.sv
 rtl/systolic_array/pe.sv

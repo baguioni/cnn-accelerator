@@ -3,7 +3,7 @@ module miso_fifo #(
     parameter int DEPTH = 32,  
     parameter int DATA_WIDTH = 8,
     parameter int DATA_LENGTH = 8,
-    localparam ADDR_WIDTH = $clog2(DEPTH),
+    parameter int ADDR_WIDTH = $clog2(DEPTH),
     parameter int INDEX = 0
 )(
     input logic i_clk, i_nrst, i_clear, i_write_en, i_pop_en, i_r_pointer_reset,
@@ -24,6 +24,19 @@ module miso_fifo #(
 
     logic write_en;
     assign write_en = i_write_en & !o_full;
+
+    // Generate 4x4 data
+    logic [DATA_WIDTH-1:0] fb_data, fb_fifo;
+    logic last_data_4b;
+    assign last_data_4b = (r_pointer == w_pointer - 1);
+
+    // Generate 2x2 data
+    logic [DATA_WIDTH-1:0] tb_data;
+    logic last_data_2b, llast_data_2b, lllast_data_2b;
+
+    assign last_data_2b = (r_pointer == w_pointer - 1);
+    assign llast_data_2b = (r_pointer == w_pointer - 2);
+    assign lllast_data_2b = (r_pointer == w_pointer - 3);
 
     // Write data
     always @ (posedge i_clk or negedge i_nrst) begin
@@ -50,13 +63,7 @@ module miso_fifo #(
         end
     end
 
-
-    // Generate 4x4 data
-    logic [DATA_WIDTH-1:0] fb_data, fb_fifo;
-    logic last_data_4b;
-    assign last_data_4b = (r_pointer == w_pointer - 1);
-
-
+    // 4-bit pop logic
     always @(*) begin
         if (o_empty) begin
             fb_data = 0;
@@ -67,14 +74,7 @@ module miso_fifo #(
         end
     end
 
-    // Generate 2x2 data
-    logic [DATA_WIDTH-1:0] tb_data;
-    logic last_data_2b, llast_data_2b, lllast_data_2b;
-
-    assign last_data_2b = (r_pointer == w_pointer - 1);
-    assign llast_data_2b = (r_pointer == w_pointer - 2);
-    assign lllast_data_2b = (r_pointer == w_pointer - 3);
-
+    // 2-bit pop logic
     always @(*) begin
         if (o_empty) begin
             tb_data = 0;
@@ -89,7 +89,6 @@ module miso_fifo #(
         end
     end
 
-    
     // Pop data
     always_ff @ (posedge i_clk or negedge i_nrst) begin
         if (~i_nrst || i_r_pointer_reset) begin

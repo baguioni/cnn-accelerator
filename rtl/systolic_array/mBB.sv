@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module HA (input logic a, b, output logic s, c );
     assign s = a ^ b;
     assign c = a & b;

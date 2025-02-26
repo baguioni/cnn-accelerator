@@ -5,7 +5,14 @@
     - Output input/weight data to the rest of the system
 */
 
-module top (
+module top #(
+    parameter int DATA_WIDTH = 8;
+    parameter int SRAM_DATA_WIDTH = 64;
+    parameter int ADDR_WIDTH = 8;
+    parameter int WEIGHT_SRAM = 0;
+    parameter int INPUT_SRAM = 1;
+    parameter int ROUTER_COUNT = 8;
+)(
     input logic i_clk, i_nrst, i_reg_clear,
 
     // Host-side 
@@ -23,13 +30,6 @@ module top (
     input logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset,
     input logic [ADDR_WIDTH-1:0] i_route_size
 );
-    localparam int DATA_WIDTH = 8;
-    localparam int SRAM_DATA_WIDTH = 64;
-    localparam int ADDR_WIDTH = 8;
-    localparam int WEIGHT_SRAM = 0;
-    localparam int INPUT_SRAM = 1;
-    localparam int ROUTER_COUNT = 8;
-
     logic sram_w_write_en, sram_i_write_en;
 
     // Select which SRAM to write to
@@ -44,6 +44,31 @@ module top (
     end
 
     logic wr_reuse_en;
+
+    // Instantiate weight router
+    logic [DATA_WIDTH-1:0] weight;
+    logic wr_data_valid;
+    logic [ROUTER_COUNT-1:0] ir_data_valid;
+    logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] ir_ifmap;
+    logic [0:ROUTER_COUNT-1][DATA_WIDTH-1:0] s_ifmap;
+
+    // Top controller signals
+    logic ir_pop_en, wr_pop_en;
+    logic ir_ready, wr_ready;
+    logic psum_out_en, or_en;
+    logic ir_done, wr_done, or_done;
+
+    // Systolic Array
+    genvar ii;
+    generate
+        for (ii=0; ii < ROUTER_COUNT; ii++) begin
+            assign s_ifmap[ii] = ir_ifmap[ii];
+        end
+    endgenerate
+
+    logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] ofmap;
+    // logic [0:ROUTER_COUNT-1] ofmap_valid;
+    logic [15:0] packed_ofmap;
 
     // Instantiate input router
     input_router #(
@@ -71,13 +96,6 @@ module top (
         .o_context_done(wr_reuse_en)
     );
 
-    // Instantiate weight router
-    logic [DATA_WIDTH-1:0] weight;
-    logic wr_data_valid;
-    logic [ROUTER_COUNT-1:0] ir_data_valid;
-    logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] ir_ifmap;
-    logic [0:ROUTER_COUNT-1][DATA_WIDTH-1:0] s_ifmap;
-
     weight_router wr_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -98,11 +116,6 @@ module top (
         .o_data(weight),
         .o_data_valid(wr_data_valid)
     );
-
-    logic ir_pop_en, wr_pop_en;
-    logic ir_ready, wr_ready;
-    logic psum_out_en, or_en;
-    logic ir_done, wr_done, or_done;
 
     top_controller #(
         .ROUTER_COUNT(ROUTER_COUNT),
@@ -126,22 +139,10 @@ module top (
         .o_or_en(or_en)
     );
 
-    // Systolic Array
-    genvar ii;
-    generate
-        for (ii=0; ii < ROUTER_COUNT; ii++) begin
-            assign s_ifmap[ii] = ir_ifmap[ii];
-        end
-    endgenerate
-
-    logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] ofmap;
-    // logic [0:ROUTER_COUNT-1] ofmap_valid;
-    logic [15:0] packed_ofmap;
-
     systolic_array #(
         .DATA_WIDTH(DATA_WIDTH),
-        .S_WIDTH(1),
-        .S_HEIGHT(ROUTER_COUNT)
+        .WIDTH(1),
+        .HEIGHT(ROUTER_COUNT)
     ) systolic_array_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),

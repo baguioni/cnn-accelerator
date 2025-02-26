@@ -6,7 +6,7 @@
 */
 module row_group #(
     parameter int ROUTER_COUNT = 4,
-    parameter int SRAM_DATA_WIDTH = 64,
+    parameter int SPAD_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,
     parameter int DATA_WIDTH = 8,
     parameter int ADDR_LENGTH = 9
@@ -23,7 +23,7 @@ module row_group #(
     input logic [ROUTER_COUNT-1:0] i_row_id,
 
     // Address comparator related signals
-    input logic [SRAM_DATA_WIDTH-1:0] i_data,
+    input logic [SPAD_DATA_WIDTH-1:0] i_data,
     input logic [ADDR_WIDTH-1:0] i_addr,
     input logic i_data_valid,
 
@@ -65,7 +65,7 @@ module row_group #(
     generate
         for (ii = 0; ii < ROUTER_COUNT; ii = ii + 1) begin : router_inst
             row_router #(
-                .SRAM_DATA_WIDTH(SRAM_DATA_WIDTH),
+                .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
                 .ADDR_WIDTH(ADDR_WIDTH),
                 .DATA_WIDTH(DATA_WIDTH),
                 .ADDR_LENGTH(ADDR_LENGTH),

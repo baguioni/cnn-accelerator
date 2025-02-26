@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module mFU (
     input  logic        clk, nrst,
     input  logic [ 7:0] a, b,

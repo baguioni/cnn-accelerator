@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module pe #(
     parameter int DATA_WIDTH = 8
 ) (

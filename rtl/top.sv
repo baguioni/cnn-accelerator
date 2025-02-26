@@ -6,12 +6,12 @@
 */
 
 module top #(
-    parameter int DATA_WIDTH = 8;
-    parameter int SRAM_DATA_WIDTH = 64;
-    parameter int ADDR_WIDTH = 8;
-    parameter int WEIGHT_SRAM = 0;
-    parameter int INPUT_SRAM = 1;
-    parameter int ROUTER_COUNT = 8;
+    parameter int DATA_WIDTH = 8,
+    parameter int SRAM_DATA_WIDTH = 64,
+    parameter int ADDR_WIDTH = 8,
+    parameter int WEIGHT_SRAM = 0,
+    parameter int INPUT_SRAM = 1,
+    parameter int ROUTER_COUNT = 8
 )(
     input logic i_clk, i_nrst, i_reg_clear,
 

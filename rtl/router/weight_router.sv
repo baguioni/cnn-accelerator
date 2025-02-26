@@ -36,6 +36,21 @@ module weight_router #(
     // SRAM
     logic spad_data_out_valid;
     logic [SPAD_DATA_WIDTH-1:0] spad_data_out;
+
+    // Controller
+    // Read from SRAM and write to MISO FIFO
+    logic [ADDR_WIDTH-1:0] read_counter, spad_read_addr; 
+    logic spad_read_en, read_en, spad_read_done;
+    
+    assign spad_read_done = read_counter > i_addr_offset;
+    assign read_en = i_en & ~spad_read_done;
+
+    logic [FIFO_ADDR-1:0] fifo_r_pointer;
+    logic fifo_pop_en;
+
+    // assign fifo_pop_en = i_pop_en & spad_read_done;
+    assign o_ready = spad_read_done & ~spad_data_out_valid;
+
     spad #(
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(SPAD_DATA_WIDTH)
@@ -71,13 +86,6 @@ module weight_router #(
         .o_pop_valid(o_data_valid)
     );
 
-    // Controller
-    // Read from SRAM and write to MISO FIFO
-    logic [ADDR_WIDTH-1:0] read_counter, spad_read_addr; 
-    logic spad_read_en, read_en, spad_read_done;
-    assign spad_read_done = read_counter > i_addr_offset;
-    assign read_en = i_en & ~spad_read_done;
-
     always_ff @(posedge i_clk or negedge i_nrst) begin
         if (~i_nrst) begin
             spad_read_en <= 0;
@@ -98,12 +106,6 @@ module weight_router #(
             end
         end
     end
-
-    logic [FIFO_ADDR-1:0] fifo_r_pointer;
-    logic fifo_pop_en;
-
-    // assign fifo_pop_en = i_pop_en & spad_read_done;
-    assign o_ready = spad_read_done & ~spad_data_out_valid;
 
     // Read from MISO FIFO and handle reuse 
     always_ff @(posedge i_clk or negedge i_nrst) begin

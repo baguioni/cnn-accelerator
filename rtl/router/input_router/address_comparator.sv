@@ -71,8 +71,14 @@ module address_comparator #(
 
 
         end else begin
+            for (int i = 0; i < SPAD_N; i++) begin
+                for (int j = 0; j < PEEK_WIDTH; j++) begin
+                    addr_hit[i][j] = 0;
+                end
+            end
+
             for (int i = 0; i < PEEK_WIDTH; i++) begin
-                addr_hit[i] = 0;
+                f_addr_hit[i] = 0;
                 data_hit[i] = 0;
             end
         end

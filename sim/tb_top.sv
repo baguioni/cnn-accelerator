@@ -45,6 +45,10 @@ module tb_top;
     initial begin
         $dumpfile("tb.vcd");
         $dumpvars(0, tb_top);
+
+        // Uncomment for VCS
+        // $vcdplusfile("tb_updown.vpd");
+        // $vcdpluson;
     end
 
     // Testbench

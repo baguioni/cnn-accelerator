@@ -3,18 +3,23 @@
 module tb_top;
     localparam int SRAM_DATA_WIDTH = 64;
     localparam int ADDR_WIDTH = 8;
+    localparam int DATA_WIDTH = 8;
+
     // File-related variables
-    integer file, r;
+    integer file, r, output_file;
     logic [SRAM_DATA_WIDTH-1:0] mem_data;
 
     // Signals
     logic i_clk, i_nrst, i_reg_clear, i_write_en, i_route_en;
-    logic [1:0] i_p_mode;
+    logic [1:0] p_mode;
     logic [SRAM_DATA_WIDTH-1:0] i_data_in;
     logic [ADDR_WIDTH-1:0] i_write_addr;
     logic [ADDR_WIDTH-1:0] i_i_start_addr, i_i_addr_end;
-    logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride; 
+    logic [ADDR_WIDTH-1:0] i_size, o_size, stride; 
     logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset, i_route_size;
+
+    logic [DATA_WIDTH*2-1:0] o_ofmap;
+    logic o_ofmap_valid;
 
     logic [1:0] i_spad_select;
 
@@ -26,7 +31,7 @@ module tb_top;
         .i_clk(i_clk),
         .i_nrst(i_nrst),
         .i_reg_clear(i_reg_clear),
-        .i_p_mode(i_p_mode),
+        .i_p_mode(p_mode),
         .i_data_in(i_data_in),
         .i_write_addr(i_write_addr),
         .i_spad_select(i_spad_select),
@@ -34,26 +39,24 @@ module tb_top;
         .i_route_en(i_route_en),
         .i_i_start_addr(i_i_start_addr),
         .i_i_addr_end(i_i_addr_end),
-        .i_i_size(i_i_size),
-        .i_o_size(i_o_size),
-        .i_stride(i_stride),
+        .i_i_size(i_size),
+        .i_o_size(o_size),
+        .i_stride(stride),
         .i_w_start_addr(i_w_start_addr),
         .i_w_addr_offset(i_w_addr_offset),
-        .i_route_size(i_route_size)
+        .i_route_size(i_route_size),
+        .o_ofmap(o_ofmap),
+        .o_ofmap_valid(o_ofmap_valid)
     );
 
     initial begin
         $dumpfile("tb.vcd");
         $dumpvars(0, tb_top);
-
-        // Uncomment for VCS
-        // $vcdplusfile("tb_updown.vpd");
-        // $vcdpluson;
     end
 
-    // Testbench
+    // Testbench initialization
     initial begin
-        // Initialize signals
+        // Default values
         i_nrst = 0;
         i_reg_clear = 0;
         i_spad_select = 0;
@@ -61,19 +64,29 @@ module tb_top;
         i_data_in = 0;
         i_i_start_addr = 0;
         i_i_addr_end = 0;
-        i_i_size = 5;
-        i_o_size = 3;
-        i_stride = 1;
         i_w_start_addr = 0;
         i_w_addr_offset = 1;
         i_route_size = 9;
         i_route_en = 0;
-        i_p_mode = 2'b00;
+
+        // Retrieve command-line arguments
+        if (!$value$plusargs("i_i_size=%d", i_size)) i_size = 10;
+        if (!$value$plusargs("i_o_size=%d", o_size)) o_size = 8;
+        if (!$value$plusargs("i_stride=%d", stride)) stride = 1;
+        if (!$value$plusargs("i_p_mode=%d", p_mode)) p_mode = 2'b00;
+
         #10;
         i_nrst = 1;
 
+        // Open output file
+        output_file = $fopen("output.txt", "w");
+        if (output_file == 0) begin
+            $display("Error opening output file!");
+            $finish;
+        end
+
         // Write to weight SRAM
-        file = $fopen("stimuli/buffer.mem", "r");
+        file = $fopen("kernel.txt", "r");
         if (file == 0) begin
             $display("Error opening file 1");
             $finish;
@@ -91,13 +104,13 @@ module tb_top;
             #10; // Wait for one clock cycle
             i_write_addr = i_write_addr + 1;
         end
-        i_i_addr_end = i_write_addr - 1;
+        
         i_write_en = 0;
         i_write_addr = 0;
         $fclose(file);
 
         // Write to input SRAM
-        file = $fopen("stimuli/buffer.mem", "r");
+        file = $fopen("ifmap.txt", "r");
         if (file == 0) begin
             $display("Error opening file 2");
             $finish;
@@ -115,12 +128,24 @@ module tb_top;
             #10; // Wait for one clock cycle
             i_write_addr = i_write_addr + 1;
         end
+        i_i_addr_end = i_write_addr - 1;
         i_write_en = 0;
         $fclose(file);
     
         #20;
         i_route_en = 1;
-        #1000;
+    end
+
+    // Monitor and write to output file whenever o_ofmap_valid is high
+    always @(posedge i_clk) begin
+        if (o_ofmap_valid) begin
+            $fwrite(output_file, "%h\n", o_ofmap);
+        end
+    end
+
+    initial begin
+        #5000;
+        $fclose(output_file);
         $finish;
     end
 endmodule

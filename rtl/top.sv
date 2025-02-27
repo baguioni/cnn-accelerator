@@ -28,7 +28,11 @@ module top #(
 
     // Weight router parameters
     input logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset,
-    input logic [ADDR_WIDTH-1:0] i_route_size
+    input logic [ADDR_WIDTH-1:0] i_route_size,
+
+    // Output
+    output logic [DATA_WIDTH*2-1:0] o_ofmap,
+    output logic o_ofmap_valid
 );
     logic spad_w_write_en, spad_i_write_en;
 
@@ -67,8 +71,6 @@ module top #(
     endgenerate
 
     logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] ofmap;
-    // logic [0:ROUTER_COUNT-1] ofmap_valid;
-    logic [15:0] packed_ofmap;
 
     // Instantiate input router
     input_router #(
@@ -166,8 +168,8 @@ module top #(
         .i_en(or_en),
         .i_ifmap(ofmap),
         .i_valid({ROUTER_COUNT{1'b1}}),
-        .o_data_out(packed_ofmap),
-        .o_valid(),
+        .o_data_out(o_ofmap),
+        .o_valid(o_ofmap_valid),
         .o_done(or_done)
     );
 endmodule

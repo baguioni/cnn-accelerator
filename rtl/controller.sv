@@ -25,6 +25,8 @@ module top_controller # (
 
     // Done signals
     input logic i_ir_done, i_wr_done, i_or_done,
+    input logic i_output_done, // From IR
+    output logic o_done,
 
     // Output router signals
     input logic [ADDR_WIDTH-1:0] i_route_size,
@@ -133,48 +135,18 @@ module top_controller # (
         end
     end
 
-
-
-
-
-
-    // always_ff @(posedge i_clk or negedge i_nrst) begin
-    //     if (~i_nrst) begin
-    //         comp_cntr <= 0;
-    //         or_start <= 0;
-    //     end else begin
-    //         if (i_reg_clear) begin
-    //             comp_cntr <= 0;
-    //             or_start <= 0;
-    //         end else if (comp_status) begin
-    //             if (comp_cntr < i_route_size + ROUTER_COUNT - 1) begin
-    //                 comp_cntr <= comp_cntr + 1;
-    //             end else begin
-    //                 comp_cntr <= 0;
-    //                 or_start <= 1;
-    //             end
-    //         end
-    //     end
-    // end
-
-    // logic or_en;
-    // assign or_en = or_start & ~i_or_done;
-
-    // always_ff @(posedge i_clk or negedge i_nrst) begin
-    //     if (~i_nrst) begin
-    //         o_psum_out_en <= 0;
-    //     end else begin
-    //         if (i_reg_clear) begin
-    //             o_psum_out_en <= 0;
-    //         end else if (or_en) begin
-    //             o_psum_out_en <= 1;
-    //             if (o_psum_out_en) begin
-    //                 o_or_en <= 1;
-    //             end
-    //         end else begin
-    //             o_psum_out_en <= 0;
-    //             o_or_en <= 0;
-    //         end
-    //     end
-    // end
+    // Finished computing entire output
+    always_ff @(posedge i_clk or negedge i_nrst) begin
+        if (~i_nrst) begin
+            o_done <= 0;
+        end else begin
+            if (i_reg_clear) begin
+                o_done <= 0;
+            end else if (i_output_done && i_wr_done && i_or_done) begin
+                o_done <= 1;
+            end else begin
+                o_done <= 0;
+            end
+        end
+    end
 endmodule

@@ -32,7 +32,8 @@ module top #(
 
     // Output
     output logic [DATA_WIDTH*2-1:0] o_ofmap,
-    output logic o_ofmap_valid
+    output logic o_ofmap_valid,
+    output logic o_done
 );
     logic spad_w_write_en, spad_i_write_en;
 
@@ -72,6 +73,8 @@ module top #(
 
     logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] ofmap;
 
+    logic output_done;
+
     // Instantiate input router
     input_router #(
         .ROUTER_COUNT(ROUTER_COUNT)
@@ -95,7 +98,8 @@ module top #(
         .o_data_valid(ir_data_valid),
         .i_pop_en(ir_pop_en),
         .o_ready(ir_ready),
-        .o_context_done(wr_reuse_en)
+        .o_context_done(wr_reuse_en),
+        .o_output_done(output_done)
     );
 
     weight_router wr_inst (
@@ -138,7 +142,9 @@ module top #(
         .i_or_done(or_done),
         .i_route_size(i_route_size),
         .o_psum_out_en(psum_out_en),
-        .o_or_en(or_en)
+        .o_or_en(or_en),
+        .i_output_done(output_done),
+        .o_done(o_done)
     );
 
     systolic_array #(

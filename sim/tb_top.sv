@@ -19,7 +19,7 @@ module tb_top;
     logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset, i_route_size;
 
     logic [DATA_WIDTH*2-1:0] o_ofmap;
-    logic o_ofmap_valid;
+    logic o_ofmap_valid, o_done;
 
     logic [1:0] i_spad_select;
 
@@ -46,7 +46,8 @@ module tb_top;
         .i_w_addr_offset(i_w_addr_offset),
         .i_route_size(i_route_size),
         .o_ofmap(o_ofmap),
-        .o_ofmap_valid(o_ofmap_valid)
+        .o_ofmap_valid(o_ofmap_valid),
+        .o_done(o_done)
     );
 
     initial begin
@@ -143,9 +144,12 @@ module tb_top;
         end
     end
 
-    initial begin
-        #5000;
-        $fclose(output_file);
-        $finish;
+    // Terminate simulation when o_done is high
+    always @(posedge i_clk) begin
+        if (o_done) begin
+            $display("Simulation completed: o_done asserted.");
+            $fclose(output_file);
+            $finish;
+        end
     end
 endmodule

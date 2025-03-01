@@ -29,7 +29,7 @@ module input_router #(
 
     // Upper level control signals
     input logic i_pop_en,
-    output logic o_ready, o_context_done
+    output logic o_ready, o_context_done, o_output_done
 );
     // SPAD related signals
     logic [SPAD_DATA_WIDTH-1:0] spad_data_out;
@@ -101,7 +101,7 @@ module input_router #(
         .o_pop_en(pop_en),
         .i_addr_empty(router_addr_empty),
         .i_data_empty(router_data_empty),
-        .o_done(),
+        .o_done(o_output_done),
         .o_reg_clear(router_reg_clear),
         .o_ready(o_ready),
         .o_context_done(o_context_done)

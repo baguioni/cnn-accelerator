@@ -2,7 +2,6 @@
 // Or perhaps higher level operation does this and just waits for done signals
 // of each operation so that it can be timed with weight router
 module input_router #(
-    parameter int SPAD_DEPTH = 256,
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,
     parameter int ROUTER_COUNT = 4,
@@ -50,7 +49,6 @@ module input_router #(
     logic router_addr_empty, router_data_empty;
 
     spad #(
-        .DEPTH(SPAD_DEPTH),
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(SPAD_DATA_WIDTH)
     ) input_sram (

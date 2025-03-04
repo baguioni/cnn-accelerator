@@ -44,6 +44,9 @@ module output_router #(
 
     logic reg_en;
 
+    logic out_en;
+    assign out_en = i_en & ~o_done;
+
     logic [$clog2(GROUP_CNT)-1:0] count;
     always_ff @(posedge i_clk) begin
         if (!i_nrst) begin
@@ -58,7 +61,7 @@ module output_router #(
         end else begin
             case (state)
                 IDLE: begin
-                    if (i_en & ~o_done) begin
+                    if (out_en) begin
                         state          <= OUT;
                         o_valid        <= 1;
                         extended_ifmap <= i_ifmap << (EMPTY * DATA_WIDTH * 2);

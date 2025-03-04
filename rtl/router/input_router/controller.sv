@@ -44,7 +44,21 @@ module ir_controller #(
     assign x_increment = o_o_x < (i_o_size * i_stride) - i_stride;
 
     always_ff @(posedge i_clk or negedge i_nrst) begin
-        if (~i_nrst || i_reg_clear) begin
+        if (~i_nrst) begin
+            o_o_x <= 0;
+            o_o_y <= 0;
+            o_row_id <= 0;
+            o_done <= 0;
+            state <= IDLE;
+            o_ag_en <= 0;
+            o_ac_en <= 0;
+            o_tile_read_en <= 0;
+            o_pop_en <= 0;
+            o_reg_clear <= 0;
+            done_coordinate_gen <= 0;
+            o_ready <= 0;
+            o_context_done <= 0;
+        end else if (i_reg_clear) begin
             o_o_x <= 0;
             o_o_y <= 0;
             o_row_id <= 0;

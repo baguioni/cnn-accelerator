@@ -53,34 +53,24 @@ module address_comparator #(
                         addr_hit[j][i] = 1;
                         data_hit[j] = spad_data[i];
                     end else begin
-                        addr_hit[i][j] = 0;
+                        addr_hit[j][i] = 0;
                     end
                 end
             end
-
-            for (int j = 0; j < PEEK_WIDTH; j++) begin
-                f_addr_hit[j] = | addr_hit[j];
-
-                // // Not sure if this is needed
-                // if (f_addr_hit[j]) begin
-                //     f_data_hit[j] = data_hit[j];
-                // end else begin
-                //     f_data_hit[j] = 0;
-                // end
-            end
-
-
         end else begin
             for (int i = 0; i < SPAD_N; i++) begin
                 for (int j = 0; j < PEEK_WIDTH; j++) begin
-                    addr_hit[i][j] = 0;
+                    addr_hit[j][i] = 0;
                 end
             end
 
             for (int i = 0; i < PEEK_WIDTH; i++) begin
-                f_addr_hit[i] = 0;
                 data_hit[i] = 0;
             end
+        end
+
+        for (int j = 0; j < PEEK_WIDTH; j++) begin
+            f_addr_hit[j] = | addr_hit[j];
         end
     end
     

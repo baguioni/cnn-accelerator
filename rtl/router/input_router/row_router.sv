@@ -33,7 +33,7 @@ module row_router #(
 
     // MISO - AC related signals
     logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] peek_addr;
-    logic [ADDR_WIDTH-1:0] ac_peek_addr [PEEK_WIDTH-1:0],
+    logic [ADDR_WIDTH-1:0] ac_peek_addr [PEEK_WIDTH-1:0];
     logic [PEEK_WIDTH-1:0] peek_valid;
     
     // Data to be sent to MPP

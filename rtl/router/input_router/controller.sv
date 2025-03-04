@@ -26,7 +26,8 @@ module ir_controller #(
 
     // Status signals
     input logic i_addr_empty, i_data_empty,
-    output logic o_done, o_reg_clear, o_ready, o_context_done
+    output logic o_done, o_reg_clear, o_ready, o_context_done,
+    output [2:0] o_state
 );
     parameter int IDLE = 0;
     parameter int INIT = 1;
@@ -37,11 +38,16 @@ module ir_controller #(
     
 
     logic [2:0] state;
-    logic y_increment, x_increment;
-    logic done_coordinate_gen;
+    logic y_increment, x_increment, xy_increment;
+    logic done_coordinate_gen, en;
+
+    assign en = i_en && !o_done;
 
     assign y_increment = o_o_y < (i_o_size * i_stride) - i_stride;
     assign x_increment = o_o_x < (i_o_size * i_stride) - i_stride;
+    assign xy_increment = y_increment || x_increment;
+
+    assign o_state = state;
 
     always_ff @(posedge i_clk or negedge i_nrst) begin
         if (~i_nrst) begin
@@ -75,7 +81,7 @@ module ir_controller #(
         end else begin
             case (state)
                 IDLE: begin
-                    if (i_en && !o_done) begin
+                    if (en) begin
                         state <= INIT;
                         // Start with (0, 0)
                     end
@@ -109,7 +115,7 @@ module ir_controller #(
                         o_row_id <= 0;
                         o_ag_en <= 0;
                         state <= WRITE_STALL;
-                    end else if (x_increment || y_increment) begin
+                    end else if (xy_increment) begin
                         o_row_id <= o_row_id + 1;
                         o_ag_en <= 1;
                     end

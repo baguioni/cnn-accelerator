@@ -12,7 +12,7 @@ module address_comparator #(
     input logic [ADDR_WIDTH-1:0] i_addr,
 
     // Fifo signals
-    input logic [PEEK_WIDTH-1:0][ADDR_WIDTH-1:0] i_peek_addr,
+    input logic [ADDR_WIDTH-1:0] i_peek_addr [PEEK_WIDTH-1:0],
     input logic [PEEK_WIDTH-1:0] i_peek_valid,
 
     output logic [PEEK_WIDTH-1:0] o_addr_hit,

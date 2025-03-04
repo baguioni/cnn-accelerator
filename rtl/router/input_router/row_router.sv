@@ -33,6 +33,7 @@ module row_router #(
 
     // MISO - AC related signals
     logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] peek_addr;
+    logic [ADDR_WIDTH-1:0] ac_peek_addr [PEEK_WIDTH-1:0],
     logic [PEEK_WIDTH-1:0] peek_valid;
     
     // Data to be sent to MPP
@@ -40,6 +41,13 @@ module row_router #(
 
     // Data to be stored in MISO
     logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] ac_data_hit;
+
+    genvar i;
+    generate
+        for (i = 0; i < PEEK_WIDTH; i++) begin
+            assign ac_peek_addr[i] = peek_addr[i];
+        end
+    endgenerate
 
     mpp_fifo #(
         .DEPTH(9),
@@ -69,7 +77,7 @@ module row_router #(
         .i_en(i_ac_en & i_data_valid),
         .i_data(i_data),
         .i_addr(i_addr),
-        .i_peek_addr(peek_addr),
+        .i_peek_addr(ac_peek_addr),
         .i_peek_valid(peek_valid),
         .o_addr_hit(ac_addr_hit),
         .o_data_hit(ac_data_hit)

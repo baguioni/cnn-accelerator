@@ -45,6 +45,8 @@ module input_router #(
     logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
     logic ag_valid;
 
+    logic [2:0] state;
+
     // Row Group related signals
     logic router_addr_empty, router_data_empty;
 
@@ -103,7 +105,8 @@ module input_router #(
         .o_done(o_output_done),
         .o_reg_clear(router_reg_clear),
         .o_ready(o_ready),
-        .o_context_done(o_context_done)
+        .o_context_done(o_context_done),
+        .o_state(state)
     );
 
     address_generator #(
@@ -139,7 +142,8 @@ module input_router #(
         .ROUTER_COUNT(ROUTER_COUNT),
         .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH),
-        .DATA_WIDTH(DATA_WIDTH)
+        .DATA_WIDTH(DATA_WIDTH),
+        .PEEK_WIDTH(SPAD_DATA_WIDTH/DATA_WIDTH)
     ) row_group (
         .i_clk(i_clk),
         .i_nrst(i_nrst),

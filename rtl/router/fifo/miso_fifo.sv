@@ -44,7 +44,7 @@ module miso_fifo #(
 
     // Pop enable signals
     logic pop_en;
-    assign pop_en = i_pop_en && !o_empty 
+    assign pop_en = i_pop_en && !o_empty;
 
     // Write data
     always @ (posedge i_clk or negedge i_nrst) begin
@@ -107,7 +107,7 @@ module miso_fifo #(
             r_pointer <= 0;
             o_data <= 0;
             o_pop_valid <= 0;
-        end else if () begin
+        end else if (pop_en) begin
             case (i_p_mode)
                 _8x8: begin
                     o_data <= fifo[r_pointer];

@@ -18,7 +18,7 @@ module top #(
     // Host-side 
     input logic [SRAM_DATA_WIDTH-1:0] i_data_in,
     input logic [ADDR_WIDTH-1:0] i_write_addr,
-    input logic [1:0] i_spad_select, // Select between weight and input SRAM
+    input logic i_spad_select, // Select between weight and input SRAM
     input logic i_write_en, i_route_en,
     input logic [1:0] i_p_mode,
 
@@ -39,13 +39,16 @@ module top #(
 
     // Select which SRAM to write to
     always_comb begin
-        if (i_spad_select == WEIGHT_SRAM) begin
+        if (~i_spad_select) begin
+            // Weight SRAM
             spad_w_write_en = i_write_en;
-            spad_i_write_en = 0;
-        end else if (i_spad_select == INPUT_SRAM) begin
-            spad_w_write_en = 0;
+            spad_i_write_en = 1'b0;
+        end else begin
+            // Input SRAM
+            spad_w_write_en = 1'b0;
             spad_i_write_en = i_write_en;
         end
+
     end
 
     logic wr_reuse_en;
@@ -62,6 +65,8 @@ module top #(
     logic ir_ready, wr_ready;
     logic psum_out_en, or_en;
     logic ir_done, wr_done, or_done;
+
+    logic ir_en, wr_en;
 
     // Systolic Array
     genvar ii;

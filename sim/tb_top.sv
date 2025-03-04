@@ -21,7 +21,7 @@ module tb_top;
     logic [DATA_WIDTH*2-1:0] o_ofmap;
     logic o_ofmap_valid, o_done;
 
-    logic [1:0] i_spad_select;
+    logic i_spad_select;
 
     // Clock generation
     initial i_clk = 0;
@@ -51,8 +51,14 @@ module tb_top;
     );
 
     initial begin
+        // Iverilog
         $dumpfile("tb.vcd");
         $dumpvars(0, tb_top);
+
+        // VCS 
+        // $vcdplusfile("tb_top.vpd");
+        // $vcdpluson;
+        // $sdf_annotate("../mapped/top.sdf", dut);
     end
 
     // Testbench initialization
@@ -135,6 +141,8 @@ module tb_top;
     
         #20;
         i_route_en = 1;
+        #5000;
+        $finish;
     end
 
     // Monitor and write to output file whenever o_ofmap_valid is high
@@ -145,11 +153,11 @@ module tb_top;
     end
 
     // Terminate simulation when o_done is high
-    always @(posedge i_clk) begin
-        if (o_done) begin
-            $display("Simulation completed: o_done asserted.");
-            $fclose(output_file);
-            $finish;
-        end
-    end
+    // always @(posedge i_clk) begin
+    //     if (o_done) begin
+    //         $display("Simulation completed: o_done asserted.");
+    //         $fclose(output_file);
+    //         $finish;
+    //     end
+    // end
 endmodule

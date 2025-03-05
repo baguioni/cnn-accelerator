@@ -1,14 +1,14 @@
 module address_comparator #(
     parameter int DATA_WIDTH = 8,
-    parameter int SPAD_WIDTH = 64,
-    parameter int SPAD_N = SPAD_WIDTH / DATA_WIDTH,
+    parameter int SPAD_DATA_WIDTH = 64,
+    parameter int SPAD_N = SPAD_DATA_WIDTH / DATA_WIDTH,
     parameter int ADDR_WIDTH = 8,
     parameter int PEEK_WIDTH = 4
 ) (
     input logic i_en,
 
     // Tile reader signals
-    input logic [SPAD_WIDTH-1:0] i_data,
+    input logic [SPAD_DATA_WIDTH-1:0] i_data,
     input logic [ADDR_WIDTH-1:0] i_addr,
 
     // Fifo signals

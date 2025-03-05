@@ -73,6 +73,9 @@ module row_router #(
 
 
     address_comparator #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .SPAD_N(SPAD_N),
+        .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH),
         .PEEK_WIDTH(SPAD_N)
     ) address_comparator (

@@ -2,7 +2,6 @@
 // Or perhaps higher level operation does this and just waits for done signals
 // of each operation so that it can be timed with weight router
 module input_router #(
-    parameter int SPAD_DEPTH = 256,
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,
     parameter int ROUTER_COUNT = 4,
@@ -29,7 +28,7 @@ module input_router #(
 
     // Upper level control signals
     input logic i_pop_en,
-    output logic o_ready, o_context_done
+    output logic o_ready, o_context_done, o_output_done
 );
     // SPAD related signals
     logic [SPAD_DATA_WIDTH-1:0] spad_data_out;
@@ -46,15 +45,17 @@ module input_router #(
     logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
     logic ag_valid;
 
+    logic [2:0] state;
+
     // Row Group related signals
     logic router_addr_empty, router_data_empty;
 
     spad #(
-        .DEPTH(SPAD_DEPTH),
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(SPAD_DATA_WIDTH)
     ) input_sram (
         .i_clk(i_clk),
+        .i_nrst(i_nrst),
         .i_write_en(i_spad_write_en),
         .i_read_en(spad_read_en),
         .i_data_in(i_data_in),
@@ -101,10 +102,11 @@ module input_router #(
         .o_pop_en(pop_en),
         .i_addr_empty(router_addr_empty),
         .i_data_empty(router_data_empty),
-        .o_done(),
+        .o_done(o_output_done),
         .o_reg_clear(router_reg_clear),
         .o_ready(o_ready),
-        .o_context_done(o_context_done)
+        .o_context_done(o_context_done),
+        .o_state(state)
     );
 
     address_generator #(
@@ -140,7 +142,8 @@ module input_router #(
         .ROUTER_COUNT(ROUTER_COUNT),
         .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH),
-        .DATA_WIDTH(DATA_WIDTH)
+        .DATA_WIDTH(DATA_WIDTH),
+        .PEEK_WIDTH(SPAD_DATA_WIDTH/DATA_WIDTH)
     ) row_group (
         .i_clk(i_clk),
         .i_nrst(i_nrst),

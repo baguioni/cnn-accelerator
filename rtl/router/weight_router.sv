@@ -56,6 +56,7 @@ module weight_router #(
         .DATA_WIDTH(SPAD_DATA_WIDTH)
     ) weight_sram (
         .i_clk(i_clk),
+        .i_nrst(i_nrst),
         .i_write_en(i_spad_write_en),
         .i_read_en(spad_read_en),
         .i_data_in(i_data_in),

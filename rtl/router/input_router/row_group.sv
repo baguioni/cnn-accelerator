@@ -9,7 +9,8 @@ module row_group #(
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,
     parameter int DATA_WIDTH = 8,
-    parameter int ADDR_LENGTH = 9
+    parameter int ADDR_LENGTH = 9,
+    parameter int PEEK_WIDTH = 8
 ) (
     input logic i_clk, i_nrst, i_reg_clear,
 
@@ -69,6 +70,7 @@ module row_group #(
                 .ADDR_WIDTH(ADDR_WIDTH),
                 .DATA_WIDTH(DATA_WIDTH),
                 .ADDR_LENGTH(ADDR_LENGTH),
+                .PEEK_WIDTH(PEEK_WIDTH),
                 .INDEX(ii)
             ) row_router_inst (
                 .i_clk(i_clk),

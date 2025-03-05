@@ -1,0 +1,12 @@
+# Set clock constraints
+create_clock -period 10000 -waveform {0 5000} [get_ports i_clk]
+set_clock_uncertainty -setup 1000 [get_clocks i_clk]
+
+# Set boundary constraints
+set_input_delay 2000 -clock i_clk [all_inputs]
+set_output_delay 3000 -clock i_clk [all_outputs]
+
+# Set environmental constraints
+set_load 50 [all_inputs]
+set_load 500 [all_outputs]
+#set_driving_cell -lib_cell SC7P5T_BUFX4_P_CSC20L [all_inputs]

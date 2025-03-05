@@ -39,6 +39,8 @@ def convolve_2d(input_matrix, kernel, stride=1):
                     sum_value += input_matrix[i + ki][j + kj] * kernel[ki][kj]
             output[i // stride][j // stride] = sum_value
     
+    print(np.matrix(output))
+
     hex_output = [[format(val, 'x') for val in row] for row in output]
     
     return (hex_output, output_rows)
@@ -146,6 +148,8 @@ def main():
     if not sim_error:
         sim_command = f'vvp dsn +i_i_size={input_size} +i_o_size={output_size} +i_stride={stride} +i_p_mode={precision}'
         result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
+    else:
+        print(sim_error)
 
     # Check if the difference of output and golden_output
     sim_command = "diff output.txt golden_output.txt"

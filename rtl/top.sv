@@ -18,7 +18,7 @@ module top #(
     // Host-side 
     input logic [SRAM_DATA_WIDTH-1:0] i_data_in,
     input logic [ADDR_WIDTH-1:0] i_write_addr,
-    input logic [1:0] i_spad_select, // Select between weight and input SRAM
+    input logic i_spad_select, // Select between weight and input SRAM
     input logic i_write_en, i_route_en,
     input logic [1:0] i_p_mode,
 
@@ -32,19 +32,23 @@ module top #(
 
     // Output
     output logic [DATA_WIDTH*2-1:0] o_ofmap,
-    output logic o_ofmap_valid
+    output logic o_ofmap_valid,
+    output logic o_done
 );
     logic spad_w_write_en, spad_i_write_en;
 
     // Select which SRAM to write to
     always_comb begin
-        if (i_spad_select == WEIGHT_SRAM) begin
+        if (~i_spad_select) begin
+            // Weight SRAM
             spad_w_write_en = i_write_en;
-            spad_i_write_en = 0;
-        end else if (i_spad_select == INPUT_SRAM) begin
-            spad_w_write_en = 0;
+            spad_i_write_en = 1'b0;
+        end else begin
+            // Input SRAM
+            spad_w_write_en = 1'b0;
             spad_i_write_en = i_write_en;
         end
+
     end
 
     logic wr_reuse_en;
@@ -62,6 +66,8 @@ module top #(
     logic psum_out_en, or_en;
     logic ir_done, wr_done, or_done;
 
+    logic ir_en, wr_en;
+
     // Systolic Array
     genvar ii;
     generate
@@ -71,6 +77,8 @@ module top #(
     endgenerate
 
     logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] ofmap;
+
+    logic output_done;
 
     // Instantiate input router
     input_router #(
@@ -95,7 +103,8 @@ module top #(
         .o_data_valid(ir_data_valid),
         .i_pop_en(ir_pop_en),
         .o_ready(ir_ready),
-        .o_context_done(wr_reuse_en)
+        .o_context_done(wr_reuse_en),
+        .o_output_done(output_done)
     );
 
     weight_router wr_inst (
@@ -138,7 +147,9 @@ module top #(
         .i_or_done(or_done),
         .i_route_size(i_route_size),
         .o_psum_out_en(psum_out_en),
-        .o_or_en(or_en)
+        .o_or_en(or_en),
+        .i_output_done(output_done),
+        .o_done(o_done)
     );
 
     systolic_array #(

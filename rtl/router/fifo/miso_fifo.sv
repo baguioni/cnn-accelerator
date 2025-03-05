@@ -38,6 +38,14 @@ module miso_fifo #(
     assign llast_data_2b = (r_pointer == w_pointer - 2);
     assign lllast_data_2b = (r_pointer == w_pointer - 3);
 
+    // reset or clear signals
+    logic clear;
+    assign clear = i_clear || i_r_pointer_reset;
+
+    // Pop enable signals
+    logic pop_en;
+    assign pop_en = i_pop_en && !o_empty;
+
     // Write data
     always @ (posedge i_clk or negedge i_nrst) begin
         if (~i_nrst) begin
@@ -91,15 +99,15 @@ module miso_fifo #(
 
     // Pop data
     always_ff @ (posedge i_clk or negedge i_nrst) begin
-        if (~i_nrst || i_r_pointer_reset) begin
+        if (~i_nrst) begin
             r_pointer <= 0;
             o_data <= 0;
             o_pop_valid <= 0;
-        end else if (i_clear) begin
+        end else if (clear) begin
             r_pointer <= 0;
             o_data <= 0;
             o_pop_valid <= 0;
-        end else if (i_pop_en && !o_empty) begin
+        end else if (pop_en) begin
             case (i_p_mode)
                 _8x8: begin
                     o_data <= fifo[r_pointer];

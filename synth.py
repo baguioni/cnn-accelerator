@@ -1,17 +1,24 @@
 import subprocess
-import csv
+from datetime import datetime
 
+# Parameters
+data_width = 8
 spad_data_width = 64
+spad_n = spad_data_width // data_width
+addr_width = 8
 rows = 8
+columns = 1
+miso_depth = 32
+mpp_depth = 16
 
-header = f"""`define DATA_WIDTH 8
+header = f"""`define DATA_WIDTH {data_width}
 `define SPAD_DATA_WIDTH {spad_data_width}
 `define SPAD_N (`SPAD_DATA_WIDTH / `DATA_WIDTH)
-`define ADDR_WIDTH 8
+`define ADDR_WIDTH {addr_width}
 `define ROWS {rows}
-`define COLUMNS 1
-`define MISO_DEPTH 32
-`define MPP_DEPTH 16"""
+`define COLUMNS {columns}
+`define MISO_DEPTH {miso_depth}
+`define MPP_DEPTH {mpp_depth}"""
 
 with open("rtl/global.svh", "w") as file:
     file.write(header)
@@ -21,18 +28,17 @@ print("global.svh file has been generated.")
 subprocess.run("dc_shell -f compile.tcl -output_log_file logs/compile.log", shell=True)
 
 # Filepaths
-cons_path = "cons/timing.sdc"
 area_log_path = "logs/area_report.log"
-timing_log_path = "logs/timing_report.log"
 
 with open(area_log_path, 'r', encoding='utf-8') as file: 
     area_data = file.readlines()
 
-# Thank you kenn for your service
+# Extract area information
 combi_area = float(area_data[21].split()[-1])
 buffinv_area = float(area_data[22].split()[-1])
 noncombi_data = float(area_data[23].split()[-1])
 total_area = float(area_data[27].split()[-1])
+
 print("Combinational Area:", combi_area, "Buff/Inv Area:", buffinv_area, "Noncombinational Area:", noncombi_data)
 print("Total Area:", total_area)
 
@@ -46,16 +52,34 @@ components = [
     ("Systolic Array", "systolic_array_inst"),
 ]
 
-csv_filename = f"{spad_data_width}_{rows}.csv"
-
+txt_filename = f"{spad_data_width}_{rows}.txt"
 spad_area = 0
 spad_percentage = 0
+formatted_date = datetime.now().strftime("%a %b %e %H:%M:%S %Y")
 
-# Save data to CSV
-with open(csv_filename, mode="w", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerow(["Component", "Area", "Percentage"])
-
+# Write data to text file
+with open(txt_filename, mode="w", newline="") as file:
+    file.write("Top Level Report\n")
+    file.write(f"Date: {formatted_date}\n\n")
+    file.write("-------------Parameters-------------\n")
+    file.write(f"data_width: {data_width}\n")
+    file.write(f"spad_data_width: {spad_data_width}\n")
+    file.write(f"spad_n: {spad_n}\n")
+    file.write(f"addr_width: {addr_width}\n")
+    file.write(f"rows: {rows}\n")
+    file.write(f"columns: {columns}\n")
+    file.write(f"miso_depth: {miso_depth}\n")
+    file.write(f"mpp_depth: {mpp_depth}\n\n")
+    
+    file.write("--------Area Information------------------\n")
+    file.write(f"Combinational Area: {combi_area}\n")
+    file.write(f"Buff/Inv Area: {buffinv_area}\n")
+    file.write(f"Noncombinational Area: {noncombi_data}\n")
+    file.write(f"Total Area: {total_area}\n\n")
+    
+    file.write("Component\t| Absolute Area\t| Percentage\n")
+    file.write("------------------------------------------\n")
+    
     for name, identifier in components:
         area_info = next((line.strip() for line in area_data if identifier in line), None)
 
@@ -73,10 +97,8 @@ with open(csv_filename, mode="w", newline="") as file:
                 area -= spad_area
                 percentage -= spad_percentage
 
-            area = f"{area:.4f}"
-            percentage = f"{percentage:.1f}"
-            writer.writerow([name, area, percentage])
+            file.write(f"{name}\t| {area:.4f}\t| {percentage:.1f}\n")
         else:
-            writer.writerow([name, "n/a", "n/a"])
+            file.write(f"{name}\t| n/a\t| n/a\n")
 
-print(f"Area data has been saved to {csv_filename}")
+print(f"Area data has been saved to {txt_filename}")

@@ -9,7 +9,7 @@
 
 
 module top_controller # (
-    parameter int ROUTER_COUNT = 2,
+    parameter int ROWS = 2,
     parameter int ADDR_WIDTH = 8
 ) (
     input logic i_clk, i_nrst, i_reg_clear,
@@ -106,7 +106,7 @@ module top_controller # (
                 end
 
                 COMPUTATION: begin
-                    if (comp_cntr < ROUTER_COUNT-1) begin
+                    if (comp_cntr < ROWS-1) begin
                         comp_cntr <= comp_cntr + 1;
                         state <= COMPUTATION;
                     end else begin

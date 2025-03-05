@@ -18,3 +18,4 @@ rtl/systolic_array/mFU.sv
 rtl/systolic_array/pe.sv
 rtl/systolic_array/systolic_array.sv
 sim/tb_top.sv
+rtl/global.svh

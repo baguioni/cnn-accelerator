@@ -5,12 +5,14 @@
     MISO - o_data_empty should be high when done sending all the data
 */
 module row_group #(
-    parameter int ROUTER_COUNT = 4,
+    parameter int ROWS = 4,
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,
     parameter int DATA_WIDTH = 8,
     parameter int ADDR_LENGTH = 9,
-    parameter int PEEK_WIDTH = 8
+    parameter int SPAD_N = SPAD_DATA_WIDTH / DATA_WIDTH,
+    parameter int MISO_DEPTH = 16,
+    parameter int MPP_DEPTH = 16
 ) (
     input logic i_clk, i_nrst, i_reg_clear,
 
@@ -21,21 +23,21 @@ module row_group #(
     // Address generator related signals
     input logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] i_ag_addr,
     input logic i_ag_valid,
-    input logic [ROUTER_COUNT-1:0] i_row_id,
+    input logic [ROWS-1:0] i_row_id,
 
     // Address comparator related signals
     input logic [SPAD_DATA_WIDTH-1:0] i_data,
     input logic [ADDR_WIDTH-1:0] i_addr,
     input logic i_data_valid,
 
-    output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data,
-    output logic [ROUTER_COUNT-1:0] o_data_valid,
+    output logic [ROWS-1:0][DATA_WIDTH-1:0] o_data,
+    output logic [ROWS-1:0] o_data_valid,
     output logic o_data_empty, o_addr_empty
 );
 
     // row router popping logic
-    logic [ROUTER_COUNT-1:0] counter;
-    logic [ROUTER_COUNT-1:0] rr_pop_en, rr_data_empty, rr_data_valid, rr_addr_empty;
+    logic [ROWS-1:0] counter;
+    logic [ROWS-1:0] rr_pop_en, rr_data_empty, rr_data_valid, rr_addr_empty;
 
     always_ff @ (posedge i_clk or negedge i_nrst) begin
         if (~i_nrst) begin
@@ -46,7 +48,7 @@ module row_group #(
                 rr_pop_en <= 0;
                 counter <= 0;
             end else if (i_miso_pop_en) begin
-                for (int i = 0; i < ROUTER_COUNT; i = i + 1) begin
+                for (int i = 0; i < ROWS; i = i + 1) begin
                     if (counter >= i) begin
                         rr_pop_en[i] <= 1;
                     end else begin
@@ -54,7 +56,7 @@ module row_group #(
                     end 
                 end
 
-                if (counter != ROUTER_COUNT) begin
+                if (counter != ROWS) begin
                     counter <= counter + 1;
                 end
             end
@@ -64,13 +66,13 @@ module row_group #(
     // row router instances
     genvar ii;
     generate
-        for (ii = 0; ii < ROUTER_COUNT; ii = ii + 1) begin : router_inst
+        for (ii = 0; ii < ROWS; ii = ii + 1) begin : router_inst
             row_router #(
                 .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
                 .ADDR_WIDTH(ADDR_WIDTH),
                 .DATA_WIDTH(DATA_WIDTH),
                 .ADDR_LENGTH(ADDR_LENGTH),
-                .PEEK_WIDTH(PEEK_WIDTH),
+                .SPAD_N(SPAD_N),
                 .INDEX(ii)
             ) row_router_inst (
                 .i_clk(i_clk),

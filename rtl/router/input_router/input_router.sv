@@ -2,11 +2,16 @@
 // Or perhaps higher level operation does this and just waits for done signals
 // of each operation so that it can be timed with weight router
 module input_router #(
-    parameter int SPAD_DATA_WIDTH = 64,
-    parameter int ADDR_WIDTH = 8,
-    parameter int ROUTER_COUNT = 4,
     parameter int DATA_WIDTH = 8,
-    parameter int ADDR_LENGTH = 9
+    parameter int SPAD_DATA_WIDTH = 64,
+    parameter int SPAD_N = SPAD_DATA_WIDTH / DATA_WIDTH,
+    parameter int ADDR_WIDTH = 8,
+    parameter int ROWS = 4,
+    parameter int MISO_DEPTH = 16,
+    parameter int MPP_DEPTH = 16,
+    // This is for 3x3 kernel
+    // Might remove this in the future
+    parameter int ADDR_LENGTH = 9 
 )(
     input logic i_clk, i_nrst, i_en, i_reg_clear,
     input logic [1:0] i_p_mode,
@@ -23,8 +28,8 @@ module input_router #(
     // Address Generator Control signals
     input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride,
 
-    output logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] o_data,
-    output logic [ROUTER_COUNT-1:0] o_data_valid,
+    output logic [ROWS-1:0][DATA_WIDTH-1:0] o_data,
+    output logic [ROWS-1:0] o_data_valid,
 
     // Upper level control signals
     input logic i_pop_en,
@@ -37,7 +42,7 @@ module input_router #(
     logic spad_read_en, tr_valid_addr;
 
     // Controller related signals
-    logic [ROUTER_COUNT-1:0] row_id, router_row_id;
+    logic [ROWS-1:0] row_id, router_row_id;
     logic [ADDR_WIDTH-1:0] o_x, o_y;
     logic ag_en, ac_en, tile_read_en, pop_en, router_reg_clear;
 
@@ -82,7 +87,7 @@ module input_router #(
     );
 
     ir_controller #(
-        .ROW_COUNT(ROUTER_COUNT),
+        .ROWS(ROWS),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) controller (
         .i_clk(i_clk),
@@ -110,10 +115,9 @@ module input_router #(
     );
 
     address_generator #(
-        .ROW_COUNT(ROUTER_COUNT),
+        .ROWS(ROWS),
         .ADDR_WIDTH(ADDR_WIDTH),
-        .ADDR_LENGTH(ADDR_LENGTH),
-        .KERNEL_SIZE(3)
+        .ADDR_LENGTH(ADDR_LENGTH)
     ) address_gen (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -139,11 +143,14 @@ module input_router #(
 
     */
     row_group #(
-        .ROUTER_COUNT(ROUTER_COUNT),
+        .ROWS(ROWS),
         .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(DATA_WIDTH),
-        .PEEK_WIDTH(SPAD_DATA_WIDTH/DATA_WIDTH)
+        .ADDR_LENGTH(ADDR_LENGTH),
+        .SPAD_N(SPAD_N),
+        .MISO_DEPTH(MISO_DEPTH),
+        .MPP_DEPTH(MPP_DEPTH)
     ) row_group (
         .i_clk(i_clk),
         .i_nrst(i_nrst),

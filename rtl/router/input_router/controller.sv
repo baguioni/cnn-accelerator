@@ -6,7 +6,7 @@
 */
 
 module ir_controller #(
-    parameter int ROW_COUNT = 4,
+    parameter int ROWS = 4,
     parameter int ADDR_WIDTH = 8
 ) (
     input logic i_clk, i_nrst, i_en, i_reg_clear,
@@ -18,7 +18,7 @@ module ir_controller #(
     input logic [ADDR_WIDTH-1:0] i_start_addr, i_o_size, i_stride,
 
     // Output coordinates
-    output logic [ROW_COUNT-1:0] o_row_id,
+    output logic [ROWS-1:0] o_row_id,
     output logic [ADDR_WIDTH-1:0] o_o_x, o_o_y,
 
     // Control signals
@@ -111,7 +111,7 @@ module ir_controller #(
                         end
                     end
 
-                    if (o_row_id == ROW_COUNT - 1) begin
+                    if (o_row_id == ROWS - 1) begin
                         o_row_id <= 0;
                         o_ag_en <= 0;
                         state <= WRITE_STALL;

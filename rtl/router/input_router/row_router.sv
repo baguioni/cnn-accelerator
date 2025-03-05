@@ -4,7 +4,9 @@ module row_router #(
     parameter int ADDR_LENGTH = 9,
     parameter int ADDR_WIDTH = 8,
     parameter int KERNEL_SIZE = 3,
-    parameter int PEEK_WIDTH = 8,
+    parameter int SPAD_N = SPAD_DATA_WIDTH / DATA_WIDTH,
+    parameter int MISO_DEPTH = 16,
+    parameter int MPP_DEPTH = 16,
     parameter int INDEX = 0
 ) (
     input logic i_clk, i_nrst, i_reg_clear,
@@ -29,31 +31,31 @@ module row_router #(
     // MPP FIFO related signals
     output logic o_mpp_empty
 );
-    logic [PEEK_WIDTH-1:0] valid_data;
+    logic [SPAD_N-1:0] valid_data;
 
     // MISO - AC related signals
-    logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] peek_addr;
-    logic [ADDR_WIDTH-1:0] ac_peek_addr [PEEK_WIDTH-1:0];
-    logic [PEEK_WIDTH-1:0] peek_valid;
+    logic [SPAD_N-1:0][DATA_WIDTH-1:0] peek_addr;
+    logic [ADDR_WIDTH-1:0] ac_peek_addr [SPAD_N-1:0];
+    logic [SPAD_N-1:0] peek_valid;
     
     // Data to be sent to MPP
-    logic [PEEK_WIDTH-1:0] ac_addr_hit;
+    logic [SPAD_N-1:0] ac_addr_hit;
 
     // Data to be stored in MISO
-    logic [PEEK_WIDTH-1:0][DATA_WIDTH-1:0] ac_data_hit;
+    logic [SPAD_N-1:0][DATA_WIDTH-1:0] ac_data_hit;
 
     genvar i;
     generate
-        for (i = 0; i < PEEK_WIDTH; i++) begin
+        for (i = 0; i < SPAD_N; i++) begin
             assign ac_peek_addr[i] = peek_addr[i];
         end
     endgenerate
 
     mpp_fifo #(
-        .DEPTH(9),
+        .DEPTH(MPP_DEPTH),
         .DATA_WIDTH(ADDR_WIDTH),
         .DATA_LENGTH(ADDR_LENGTH),
-        .PEEK_WIDTH(PEEK_WIDTH)
+        .PEEK_WIDTH(SPAD_N)
     ) mpp_fifo (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -72,7 +74,7 @@ module row_router #(
 
     address_comparator #(
         .ADDR_WIDTH(ADDR_WIDTH),
-        .PEEK_WIDTH(PEEK_WIDTH)
+        .PEEK_WIDTH(SPAD_N)
     ) address_comparator (
         .i_en(i_ac_en & i_data_valid),
         .i_data(i_data),
@@ -84,9 +86,9 @@ module row_router #(
     );
 
     miso_fifo #(
-        .DEPTH(32),
+        .DEPTH(MISO_DEPTH),
         .DATA_WIDTH(DATA_WIDTH),
-        .DATA_LENGTH(PEEK_WIDTH),
+        .DATA_LENGTH(SPAD_N),
         .INDEX(INDEX)
     ) miso_fifo (
         .i_clk(i_clk),

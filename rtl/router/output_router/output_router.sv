@@ -1,20 +1,20 @@
 module output_router #(
     parameter int SPAD_ADDR_WIDTH = 8,
     parameter int SPAD_DATA_WIDTH = 16,                 // SPAD can have 2B per address
-    parameter int ROUTER_COUNT = 4,                     // Also # of PE in systolic array
+    parameter int ROWS = 4,                     // Also # of PE in systolic array
     parameter int DATA_WIDTH = 8,                       // PE output width
     parameter int MEMBER_CNT = (SPAD_DATA_WIDTH+DATA_WIDTH-1)/DATA_WIDTH,
-    parameter int GROUP_CNT  = (ROUTER_COUNT+MEMBER_CNT-1)/MEMBER_CNT
+    parameter int GROUP_CNT  = (ROWS+MEMBER_CNT-1)/MEMBER_CNT
 ) (
     input logic i_clk, i_nrst, i_en,
     // ifmap signals
-    input  logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] i_ifmap,
-    input  logic [ROUTER_COUNT-1:0] i_valid,
+    input  logic [0:ROWS-1][DATA_WIDTH*2-1:0] i_ifmap,
+    input  logic [ROWS-1:0] i_valid,
 
     output logic [SPAD_DATA_WIDTH-1:0] o_data_out,
     output logic o_valid, o_done
 );
-    localparam EMPTY = MEMBER_CNT*GROUP_CNT - ROUTER_COUNT;
+    localparam EMPTY = MEMBER_CNT*GROUP_CNT - ROWS;
     
     logic [0:GROUP_CNT-1][SPAD_DATA_WIDTH-1:0] output_data;
     logic [0:MEMBER_CNT*GROUP_CNT-1][DATA_WIDTH*2-1:0] extended_ifmap;

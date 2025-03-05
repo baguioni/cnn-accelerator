@@ -7,11 +7,11 @@ module weight_router #(
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int ADDR_WIDTH = 8,
     parameter int DATA_WIDTH = 8,
-    parameter int DATA_LENGTH = 8,
+    parameter int SPAD_N = SPAD_DATA_WIDTH / DATA_WIDTH,
 
         // MISO FIFO Params
-    parameter int DEPTH = 32,
-    parameter int FIFO_ADDR = $clog2(DEPTH)
+    parameter int MISO_DEPTH = 32,
+    parameter int FIFO_ADDR = $clog2(MISO_DEPTH)
 )(
     input logic i_clk, i_nrst, i_reg_clear, i_fifo_clear,
     input logic i_spad_write_en, i_en,
@@ -68,9 +68,9 @@ module weight_router #(
 
     // MISO FIFO
     miso_fifo #(
-        .DEPTH(DEPTH),
+        .DEPTH(MISO_DEPTH),
         .DATA_WIDTH(DATA_WIDTH),
-        .DATA_LENGTH(DATA_LENGTH)
+        .DATA_LENGTH(SPAD_N)
     ) fifo_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -80,7 +80,7 @@ module weight_router #(
         .i_p_mode(i_p_mode),
         .i_r_pointer_reset(i_reuse_en),
         .i_data(spad_data_out),
-        .i_valid({DATA_LENGTH{spad_data_out_valid}}),
+        .i_valid({SPAD_N{spad_data_out_valid}}),
         .o_data(o_data),
         .o_empty(),
         .o_full(),

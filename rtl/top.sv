@@ -1,22 +1,22 @@
-/*
-    What it should do:
-    - Write to weight/input SRAM
-    - Control weight and input routers
-    - Output input/weight data to the rest of the system
-*/
+`include "rtl/global.svh"
 
 module top #(
-    parameter int DATA_WIDTH = 8,
-    parameter int SRAM_DATA_WIDTH = 64,
-    parameter int ADDR_WIDTH = 8,
-    parameter int WEIGHT_SRAM = 0,
-    parameter int INPUT_SRAM = 1,
-    parameter int ROUTER_COUNT = 8
+    // ---- Constants ----
+    parameter int DATA_WIDTH = `DATA_WIDTH,
+
+    // ---- Configurable parameters ----
+    parameter int SPAD_DATA_WIDTH = `SPAD_DATA_WIDTH,
+    parameter int SPAD_N = `SPAD_N,  // This will also be the Peek Width
+    parameter int ADDR_WIDTH = `ADDR_WIDTH,  // This will determine depth
+    parameter int ROWS = `ROWS,
+    parameter int COLUMNS = `COLUMNS,
+    parameter int MISO_DEPTH = `MISO_DEPTH,
+    parameter int MPP_DEPTH = `MPP_DEPTH
 )(
     input logic i_clk, i_nrst, i_reg_clear,
 
     // Host-side 
-    input logic [SRAM_DATA_WIDTH-1:0] i_data_in,
+    input logic [SPAD_DATA_WIDTH-1:0] i_data_in,
     input logic [ADDR_WIDTH-1:0] i_write_addr,
     input logic i_spad_select, // Select between weight and input SRAM
     input logic i_write_en, i_route_en,
@@ -56,9 +56,9 @@ module top #(
     // Instantiate weight router
     logic [DATA_WIDTH-1:0] weight;
     logic wr_data_valid;
-    logic [ROUTER_COUNT-1:0] ir_data_valid;
-    logic [ROUTER_COUNT-1:0][DATA_WIDTH-1:0] ir_ifmap;
-    logic [0:ROUTER_COUNT-1][DATA_WIDTH-1:0] s_ifmap;
+    logic [ROWS-1:0] ir_data_valid;
+    logic [ROWS-1:0][DATA_WIDTH-1:0] ir_ifmap;
+    logic [0:ROWS-1][DATA_WIDTH-1:0] s_ifmap;
 
     // Top controller signals
     logic ir_pop_en, wr_pop_en;
@@ -71,18 +71,24 @@ module top #(
     // Systolic Array
     genvar ii;
     generate
-        for (ii=0; ii < ROUTER_COUNT; ii++) begin
+        for (ii=0; ii < ROWS; ii++) begin
             assign s_ifmap[ii] = ir_ifmap[ii];
         end
     endgenerate
 
-    logic [0:ROUTER_COUNT-1][DATA_WIDTH*2-1:0] ofmap;
+    logic [0:ROWS-1][DATA_WIDTH*2-1:0] ofmap;
 
     logic output_done;
 
     // Instantiate input router
     input_router #(
-        .ROUTER_COUNT(ROUTER_COUNT)
+        .DATA_WIDTH(DATA_WIDTH),
+        .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
+        .SPAD_N(SPAD_N),
+        .ADDR_WIDTH(ADDR_WIDTH),
+        .ROWS(ROWS),
+        .MPP_DEPTH(MPP_DEPTH),
+        .MISO_DEPTH(MISO_DEPTH)
     ) ir_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -107,7 +113,13 @@ module top #(
         .o_output_done(output_done)
     );
 
-    weight_router wr_inst (
+    weight_router #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
+        .SPAD_N(SPAD_N),
+        .ADDR_WIDTH(ADDR_WIDTH),
+        .MISO_DEPTH(MISO_DEPTH)
+    ) wr_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
         .i_reg_clear(i_reg_clear),
@@ -129,7 +141,7 @@ module top #(
     );
 
     top_controller #(
-        .ROUTER_COUNT(ROUTER_COUNT),
+        .ROWS(ROWS),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) top_controller_inst (
         .i_clk(i_clk),
@@ -154,8 +166,8 @@ module top #(
 
     systolic_array #(
         .DATA_WIDTH(DATA_WIDTH),
-        .WIDTH(1),
-        .HEIGHT(ROUTER_COUNT)
+        .WIDTH(COLUMNS),
+        .HEIGHT(ROWS)
     ) systolic_array_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -171,14 +183,14 @@ module top #(
     output_router #(
         .SPAD_ADDR_WIDTH(ADDR_WIDTH),
         .SPAD_DATA_WIDTH(16),
-        .ROUTER_COUNT(ROUTER_COUNT),
+        .ROWS(ROWS),
         .DATA_WIDTH(DATA_WIDTH)
     ) or_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
         .i_en(or_en),
         .i_ifmap(ofmap),
-        .i_valid({ROUTER_COUNT{1'b1}}),
+        .i_valid({ROWS{1'b1}}),
         .o_data_out(o_ofmap),
         .o_valid(o_ofmap_valid),
         .o_done(or_done)

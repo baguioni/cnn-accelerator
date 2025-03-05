@@ -11,18 +11,18 @@
     thus, no modification is needed in the address generator module.
 */
 module address_generator #(
-    parameter int ROW_COUNT = 4,
+    parameter int ROWS = 4,
     parameter int ADDR_WIDTH = 6,
     parameter int ADDR_LENGTH = 9,
     parameter int KERNEL_SIZE = 3
 ) (
     input logic i_clk, i_nrst, i_en, i_reg_clear,
     input logic [ADDR_WIDTH-1:0] i_o_x, i_o_y, i_i_size, i_start_addr,
-    input logic [ROW_COUNT-1:0] i_row_id,
+    input logic [ROWS-1:0] i_row_id,
     output logic o_valid, 
     output logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] o_addr,
     output logic [ADDR_WIDTH-1:0] o_o_x, o_o_y,
-    output logic [ROW_COUNT-1:0] o_row_id
+    output logic [ROWS-1:0] o_row_id
 );
     logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] addr;
     

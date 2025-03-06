@@ -81,6 +81,14 @@ def output_to_file(array, n, filename):
     except IOError as e:
         print(f"An error occurred while writing to the file: {e}")
 
+def to_precision(number, bits):
+    n = bin(number & ((1<<bits)-1))[2:]
+    n = n[0]*(32-bits)+n
+    num = int(n, 2)
+    if num >= 2**(bits-1):
+        num -= 2**32
+    return num
+
 def format_output(array):
     flattened_array = []
     

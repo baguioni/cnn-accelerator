@@ -25,7 +25,7 @@ def generate_sequential_array(input_size, precision):
     
     return array_2d
 
-def generate_random_array(input_size, precision):
+def generate_random_2d_array(input_size, precision):
     max_value = (1 << precision) - 1
     array_2d = []
 
@@ -34,6 +34,19 @@ def generate_random_array(input_size, precision):
         array_2d.append(row)
     
     return array_2d
+
+def generate_random_3d_array(input_size, channels, precision):
+    max_value = (1 << precision) - 1
+    array_3d = []
+
+    for _ in range(channels):
+        channel = []
+        for _ in range(input_size):
+            row = [random.randint(0, max_value) for _ in range(input_size)]
+            channel.append(row)
+        array_3d.append(channel)
+    
+    return array_3d
 
 def convolve_2d(input_matrix, kernel, stride=1):
     input_rows = len(input_matrix)
@@ -61,6 +74,9 @@ def convolve_2d(input_matrix, kernel, stride=1):
 # Helper Functions
 def flatten_2d_array(a):
     return [i for r in a for i in r]
+
+def flatten_3d_array(arr):
+    return [item for row in arr for col in row for item in col]
 
 # n is how many bytes the theoretical SPAD can hold
 def array_to_file(array, n, filename):
@@ -118,46 +134,54 @@ def format_output(array):
     
     return flattened_array
 
+def convert_nchw_to_nhwc(nchw_array):
+    channels = len(nchw_array)
+    height = len(nchw_array[0])
+    width = len(nchw_array[0][0])
+
+    # Initialize NHWC array with shape (height, width, channels)
+    nhwc_array = [[[nchw_array[c][h][w] for c in range(channels)] 
+                   for w in range(width)] 
+                   for h in range(height)]
+    
+    return nhwc_array
+
 def main():
     parser = argparse.ArgumentParser(description="Process input parameters.")
     parser.add_argument("input_size", type=int, help="Size of input")
+    parser.add_argument("channels", type=int, help="Number of channels")
     parser.add_argument("stride", type=int, help="Stride value")
     parser.add_argument("precision", type=int, help="Precision value")
-    parser.add_argument("data_type", choices=["r", "s"], help="Type of r (random) or s (sequential) data generation")
 
     args = parser.parse_args()
 
     input_size = args.input_size
+    channels = args.channels
     stride = args.stride
     precision = args.precision
-    data_type = args.data_type
 
-    input_array = None
-    if data_type == "s":
-        input_array = generate_sequential_array(input_size, precision)
-    else:
-        input_array = generate_random_array(input_size, precision)
+    input_array = generate_random_3d_array(input_size, channels, precision)
 
-    kernel = None
-    if data_type == "s":
-        kernel = generate_sequential_array(3, precision)
-    else:
-        kernel = generate_random_array(3, precision)
+    kernel = generate_random_2d_array(3, precision)
 
-    output, output_size = convolve_2d(input_array, kernel, stride)
+    output, output_size = convolve_2d(input_array[0], kernel, stride)
 
-    print(f'Input Size: {input_size}\nOutput Size: {output_size}\nStride: {stride}\nPrecision: {precision}')
+    nhwc_array = convert_nchw_to_nhwc(input_array)
+
+    print(f'Input Size: {input_size}\nNumber of Channels: {channels}\nOutput Size: {output_size}\nStride: {stride}\nPrecision: {precision}')
     if (input_size <= 10):
         print("---------------------------------------------------------------")
         print("Input:")
         print(input_array)
+        print("Channel 0:")
+        print(input_array[0])
         print("Kernel:")
         print(kernel)
         print("Output:")
         print(output)
 
     # # Write input, kernel, and output arrays to files
-    array_to_file(flatten_2d_array(input_array), 8, "ifmap.txt")
+    array_to_file(flatten_3d_array(nhwc_array), 8, "ifmap.txt")
     array_to_file(flatten_2d_array(kernel), 8, "kernel.txt")
     output_to_file(format_output(flatten_2d_array(output)), 1, "golden_output.txt")
 
@@ -172,10 +196,12 @@ def main():
     elif precision == 2:
         p_mode = 2
 
+    # To add specific which channel to convolve
     if not sim_error:
-        print(f"input_size: {input_size}, output_size: {output_size}, stride: {stride}, precision: {precision}")
-        sim_command = f'vvp dsn +i_i_size={input_size} +i_o_size={output_size} +i_stride={stride} +i_p_mode={p_mode}'
+        print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
+        sim_command = f'vvp dsn +i_i_size={input_size} +i_c_size={channels} +i_c={0} +i_o_size={output_size} +i_stride={stride} +i_p_mode={p_mode}'
         result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
+        print(result.stdout)
     else:
         print(sim_error)
 

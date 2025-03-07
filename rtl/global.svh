@@ -1,7 +1,7 @@
 `define DATA_WIDTH 8
 `define SPAD_DATA_WIDTH 64
 `define SPAD_N (`SPAD_DATA_WIDTH / `DATA_WIDTH)
-`define ADDR_WIDTH 8
+`define ADDR_WIDTH 8 // Fix when width isnt 8-bit
 `define ROWS 8
 `define COLUMNS 1
 `define MISO_DEPTH 32

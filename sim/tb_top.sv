@@ -1,9 +1,12 @@
 `timescale 1ns / 1ps
+`include "rtl/global.svh"
 
 module tb_top;
-    localparam int SRAM_DATA_WIDTH = 64;
-    localparam int ADDR_WIDTH = 8;
-    localparam int DATA_WIDTH = 8;
+    localparam int SRAM_DATA_WIDTH = `SPAD_DATA_WIDTH;
+    localparam int ADDR_WIDTH = `ADDR_WIDTH;
+    localparam int DATA_WIDTH = `DATA_WIDTH;
+
+    int counter = 0; // counter initialization
 
     // File-related variables
     integer file, r, output_file;
@@ -15,7 +18,7 @@ module tb_top;
     logic [SRAM_DATA_WIDTH-1:0] i_data_in;
     logic [ADDR_WIDTH-1:0] i_write_addr;
     logic [ADDR_WIDTH-1:0] i_i_start_addr, i_i_addr_end;
-    logic [ADDR_WIDTH-1:0] i_size, o_size, stride; 
+    logic [ADDR_WIDTH-1:0] i_size, o_size, stride, i_c_size, i_c; 
     logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset, i_route_size;
 
     logic [DATA_WIDTH*2-1:0] o_ofmap;
@@ -41,6 +44,8 @@ module tb_top;
         .i_i_addr_end(i_i_addr_end),
         .i_i_size(i_size),
         .i_o_size(o_size),
+        .i_i_c_size(i_c_size),
+        .i_i_c(i_c),
         .i_stride(stride),
         .i_w_start_addr(i_w_start_addr),
         .i_w_addr_offset(i_w_addr_offset),
@@ -81,6 +86,8 @@ module tb_top;
 
         // Retrieve command-line arguments
         if (!$value$plusargs("i_i_size=%d", i_size)) i_size = 10;
+        if (!$value$plusargs("i_c_size=%d", i_c_size)) i_c_size = 2;
+        if (!$value$plusargs("i_c=%d", i_c)) i_c = 0;
         if (!$value$plusargs("i_o_size=%d", o_size)) o_size = 8;
         if (!$value$plusargs("i_stride=%d", stride)) stride = 1;
         if (!$value$plusargs("i_p_mode=%d", p_mode)) p_mode = 2'b00;
@@ -144,6 +151,11 @@ module tb_top;
     
         #20;
         i_route_en = 1;
+
+        while(i_route_en == 1 & o_done != 1) begin // while SIG = "1"
+            @(posedge i_clk); // when clock signal gets high
+            counter++; // increase counter by 1
+        end
     end
 
     // Monitor and write to output file whenever o_ofmap_valid is high
@@ -157,6 +169,7 @@ module tb_top;
     always @(posedge i_clk) begin
         if (o_done) begin
             $display("Simulation completed: o_done asserted.");
+            $display("Total cycles: %d", counter);
             $fclose(output_file);
             $finish;
         end

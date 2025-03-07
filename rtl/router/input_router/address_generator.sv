@@ -1,15 +1,3 @@
-/*
-    Currently, implements 3x3 depthwise convolution address generation with stride = 1.
-
-    TODO:
-    - 3x3 depthwise convolution with stride = 2
-    - pointwise convolution
-    - select between depthwise and pointwise convolution
-
-    NOTES:
-    - The stride can actually be handled by the output coordinate generator logic
-    thus, no modification is needed in the address generator module.
-*/
 module address_generator #(
     parameter int ROWS = 4,
     parameter int ADDR_WIDTH = 6,
@@ -17,7 +5,8 @@ module address_generator #(
     parameter int KERNEL_SIZE = 3
 ) (
     input logic i_clk, i_nrst, i_en, i_reg_clear,
-    input logic [ADDR_WIDTH-1:0] i_o_x, i_o_y, i_i_size, i_start_addr,
+    input logic [ADDR_WIDTH-1:0] i_o_x, i_o_y, i_i_c, i_i_size, i_i_c_size, 
+    input logic [ADDR_WIDTH-1:0] i_start_addr,
     input logic [ROWS-1:0] i_row_id,
     output logic o_valid, 
     output logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] o_addr,
@@ -28,13 +17,20 @@ module address_generator #(
     
     logic write_done;
     
+    // generate address for each element corresponding to the sliding window
     genvar x, y;
     generate
         for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x
             for (y = 0; y < KERNEL_SIZE; y = y + 1) begin : gen_y
                 localparam int addr_idx = x * KERNEL_SIZE + y;
                 always_comb begin
-                    addr[addr_idx] = i_start_addr + ((i_o_x + x) * i_i_size + (i_o_y + y));
+                    // offset_nchw(n, c, h, w) = c * HW + h * W + w
+                    // Uncomment if using NCHW format
+                    // addr[addr_idx] = i_start_addr + ((i_o_x + x) * i_i_size + (i_o_y + y));
+
+                    // offset_nhwc(n, c, h, w) = h * WC + w * C + c
+                    // Uncomment if using NHWC format
+                    addr[addr_idx] = i_start_addr + (i_o_x + x) * i_i_size * i_i_c_size + (i_o_y + y) * i_i_c_size + i_i_c;
                 end
             end
         end

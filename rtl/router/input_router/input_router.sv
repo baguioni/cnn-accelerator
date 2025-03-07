@@ -27,6 +27,7 @@ module input_router #(
 
     // Address Generator Control signals
     input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride,
+    input logic [ADDR_WIDTH-1:0] i_i_c_size, i_i_c,
 
     output logic [ROWS-1:0][DATA_WIDTH-1:0] o_data,
     output logic [ROWS-1:0] o_data_valid,
@@ -125,7 +126,9 @@ module input_router #(
         .i_reg_clear(router_reg_clear),
         .i_o_x(o_x),
         .i_o_y(o_y),
+        .i_i_c(i_i_c),
         .i_i_size(i_i_size),
+        .i_i_c_size(i_i_c_size),
         .i_start_addr(i_start_addr),
         .o_valid(ag_valid),
         .o_addr(ag_addr),

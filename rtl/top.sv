@@ -24,7 +24,7 @@ module top #(
 
     // Input router parameters
     input logic [ADDR_WIDTH-1:0] i_i_start_addr, i_i_addr_end,
-    input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride, 
+    input logic [ADDR_WIDTH-1:0] i_i_size, i_i_c_size, i_i_c, i_o_size, i_stride, 
 
     // Weight router parameters
     input logic [ADDR_WIDTH-1:0] i_w_start_addr, i_w_addr_offset,
@@ -105,6 +105,8 @@ module top #(
         .i_i_size(i_i_size),
         .i_o_size(i_o_size),
         .i_stride(i_stride),
+        .i_i_c_size(i_i_c_size),
+        .i_i_c(i_i_c),
         .o_data(ir_ifmap),
         .o_data_valid(ir_data_valid),
         .i_pop_en(ir_pop_en),

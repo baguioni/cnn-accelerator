@@ -34,7 +34,7 @@ module row_router #(
     logic [SPAD_N-1:0] valid_data;
 
     // MISO - AC related signals
-    logic [SPAD_N-1:0][DATA_WIDTH-1:0] peek_addr;
+    logic [SPAD_N-1:0][ADDR_WIDTH-1:0] peek_addr;
     logic [ADDR_WIDTH-1:0] ac_peek_addr [SPAD_N-1:0];
     logic [SPAD_N-1:0] peek_valid;
     

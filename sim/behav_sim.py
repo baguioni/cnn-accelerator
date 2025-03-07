@@ -9,17 +9,31 @@
 
 
 import argparse
-import numpy as np
 import subprocess
+import random
 
 def generate_sequential_array(input_size, precision):
-    max_value = (1 << precision)
-    array = np.arange(input_size * input_size) % max_value
-    return array.reshape(input_size, input_size)
+    max_value = 1 << precision
+    total_elements = input_size * input_size
+    array_1d = [i % max_value for i in range(total_elements)]
+    
+    array_2d = []
+    for row_index in range(input_size):
+        start = row_index * input_size
+        end = start + input_size
+        array_2d.append(array_1d[start:end])
+    
+    return array_2d
 
 def generate_random_array(input_size, precision):
     max_value = (1 << precision) - 1
-    return np.random.randint(0, max_value + 1, size=(input_size, input_size), dtype=np.int32)
+    array_2d = []
+
+    for _ in range(input_size):
+        row = [random.randint(0, max_value) for _ in range(input_size)]
+        array_2d.append(row)
+    
+    return array_2d
 
 def convolve_2d(input_matrix, kernel, stride=1):
     input_rows = len(input_matrix)
@@ -39,7 +53,6 @@ def convolve_2d(input_matrix, kernel, stride=1):
                     sum_value += input_matrix[i + ki][j + kj] * kernel[ki][kj]
             output[i // stride][j // stride] = sum_value
     
-    print(np.matrix(output))
 
     hex_output = [[format(val, 'x') for val in row] for row in output]
     
@@ -137,12 +150,11 @@ def main():
     if (input_size <= 10):
         print("---------------------------------------------------------------")
         print("Input:")
-        print(np.matrix(input_array))
+        print(input_array)
         print("Kernel:")
-        print(np.matrix(kernel))
+        print(kernel)
         print("Output:")
-        print(np.matrix(output))
-
+        print(output)
 
     # # Write input, kernel, and output arrays to files
     array_to_file(flatten_2d_array(input_array), 8, "ifmap.txt")
@@ -153,8 +165,16 @@ def main():
     result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
     sim_error = result.stderr
 
+    # defaults to 8-bit precision
+    p_mode = 0
+    if precision == 4:
+        p_mode = 1
+    elif precision == 2:
+        p_mode = 2
+
     if not sim_error:
-        sim_command = f'vvp dsn +i_i_size={input_size} +i_o_size={output_size} +i_stride={stride} +i_p_mode={precision}'
+        print(f"input_size: {input_size}, output_size: {output_size}, stride: {stride}, precision: {precision}")
+        sim_command = f'vvp dsn +i_i_size={input_size} +i_o_size={output_size} +i_stride={stride} +i_p_mode={p_mode}'
         result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
     else:
         print(sim_error)

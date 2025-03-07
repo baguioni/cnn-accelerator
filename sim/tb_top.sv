@@ -59,6 +59,9 @@ module tb_top;
         // $vcdplusfile("tb_top.vpd");
         // $vcdpluson;
         // $sdf_annotate("../mapped/top.sdf", dut);
+        // Prime Time        
+        // $dumpfile("tb_top.dump");
+        // $dumpvars(0, tb_top);
     end
 
     // Testbench initialization
@@ -141,8 +144,6 @@ module tb_top;
     
         #20;
         i_route_en = 1;
-        #5000;
-        $finish;
     end
 
     // Monitor and write to output file whenever o_ofmap_valid is high
@@ -153,11 +154,11 @@ module tb_top;
     end
 
     // Terminate simulation when o_done is high
-    // always @(posedge i_clk) begin
-    //     if (o_done) begin
-    //         $display("Simulation completed: o_done asserted.");
-    //         $fclose(output_file);
-    //         $finish;
-    //     end
-    // end
+    always @(posedge i_clk) begin
+        if (o_done) begin
+            $display("Simulation completed: o_done asserted.");
+            $fclose(output_file);
+            $finish;
+        end
+    end
 endmodule

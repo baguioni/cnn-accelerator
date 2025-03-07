@@ -35,11 +35,11 @@ initial begin
     #5;
     nrst = 1;
     
-    ip_file = $fopen("./scripts/input.txt" ,"r");
+    ip_file = $fopen("input.txt" ,"r");
     if (ip_file)  $display("Input file opened");
     else      $display("Input file NOT opened");
 
-    op_file = $fopen("./scripts/test.txt","w");
+    op_file = $fopen("test.txt","w");
     if (op_file) $display("Output file opened");
     else     $display("Output file NOT opened");
 

@@ -100,8 +100,8 @@ def mFU(a: Int, b: Int, mode, debug=False) -> Int:
 
 @timer
 def run_mfu_checker(lim: int = 2**8) -> None:
-    with open('./scripts/input.txt' ,'w') as ip, \
-         open('./scripts/output.txt','w') as op:
+    with open('input.txt' ,'w') as ip, \
+         open('output.txt','w') as op:
         
         for m in range(3):
             for a in range(lim):
@@ -114,12 +114,12 @@ def run_mfu_checker(lim: int = 2**8) -> None:
                     ip.write(f'{bb.signed() }\n')
                     op.write(f'{out.signed()}\n')
 
-    os.system("iverilog -g2012 -o dsn -f filelist.txt")
+    os.system("iverilog -g2012 -o dsn -f mFU_filelist.txt")
     os.system("vvp dsn")
 
-    with open('./scripts/input.txt' ,'r') as ip, \
-         open('./scripts/output.txt','r') as op, \
-         open('./scripts/test.txt'  ,'r') as te:
+    with open('input.txt' ,'r') as ip, \
+         open('output.txt','r') as op, \
+         open('test.txt'  ,'r') as te:
         
         while True:
             i=ip.readline()[:-1]
@@ -137,8 +137,8 @@ def run_mfu_checker(lim: int = 2**8) -> None:
 
 @timer
 def run_specific(testcases: List[Tuple[int]]):
-    with open('./scripts/input.txt' ,'w') as ip, \
-         open('./scripts/output.txt','w') as op:
+    with open('input.txt' ,'w') as ip, \
+         open('output.txt','w') as op:
         
         for m,a,b in testcases:
             aa = Int(a)
@@ -149,12 +149,12 @@ def run_specific(testcases: List[Tuple[int]]):
             ip.write(f'{bb.signed() }\n')
             op.write(f'{out.signed()}\n')
 
-    os.system("iverilog -g2012 -o dsn -f filelist.txt")
+    os.system("iverilog -g2012 -o dsn -f mFU_filelist.txt")
     os.system("vvp dsn")
 
-    with open('./scripts/input.txt' ,'r') as ip, \
-         open('./scripts/output.txt','r') as op, \
-         open('./scripts/test.txt'  ,'r') as te:
+    with open('input.txt' ,'r') as ip, \
+         open('output.txt','r') as op, \
+         open('test.txt'  ,'r') as te:
         
         while True:
             i=ip.readline()[:-1]

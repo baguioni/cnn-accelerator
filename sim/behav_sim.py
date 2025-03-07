@@ -82,7 +82,7 @@ def output_to_file(array, n, filename):
         print(f"An error occurred while writing to the file: {e}")
 
 def to_precision(number, bits):
-    n = bin(number & ((1<<bits)-1))[2:]
+    n = f"{(number & ((1<<bits)-1)):0{bits}b}"
     n = n[0]*(32-bits)+n
     num = int(n, 2)
     if num >= 2**(bits-1):

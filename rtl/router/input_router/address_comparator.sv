@@ -29,7 +29,7 @@ module address_comparator #(
     generate
         for (ii=0; ii < SPAD_N; ii++) begin
             assign spad_data[ii] = i_data[ii*DATA_WIDTH+:DATA_WIDTH];
-            assign spad_addr[ii] = i_addr * ADDR_WIDTH + ii;
+            assign spad_addr[ii] = i_addr * SPAD_N + ii;
         end
     endgenerate
 

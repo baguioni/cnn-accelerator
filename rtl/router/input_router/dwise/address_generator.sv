@@ -17,20 +17,25 @@ module address_generator #(
     
     logic write_done;
     
+    // For DWise Conv
     // generate address for each element corresponding to the sliding window
     genvar x, y;
-    generate
+    generate  
         for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x
             for (y = 0; y < KERNEL_SIZE; y = y + 1) begin : gen_y
                 localparam int addr_idx = x * KERNEL_SIZE + y;
                 always_comb begin
+                    if (i_en) begin
                     // offset_nchw(n, c, h, w) = c * HW + h * W + w
                     // Uncomment if using NCHW format
                     // addr[addr_idx] = i_start_addr + ((i_o_x + x) * i_i_size + (i_o_y + y));
 
                     // offset_nhwc(n, c, h, w) = h * WC + w * C + c
                     // Uncomment if using NHWC format
-                    addr[addr_idx] = i_start_addr + (i_o_x + x) * i_i_size * i_i_c_size + (i_o_y + y) * i_i_c_size + i_i_c;
+                        addr[addr_idx] = i_start_addr + (i_o_x + x) * i_i_size * i_i_c_size + (i_o_y + y) * i_i_c_size + i_i_c;
+                    end else begin
+                        addr[addr_idx] = '0;
+                    end
                 end
             end
         end

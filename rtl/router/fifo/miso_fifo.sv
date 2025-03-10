@@ -1,6 +1,6 @@
 // Multiple Input Single Output (MISO) FIFO
 module miso_fifo #(
-    parameter int DEPTH = 32,  
+    parameter int DEPTH = 16,  
     parameter int DATA_WIDTH = 8,
     parameter int DATA_LENGTH = 8,
     parameter int ADDR_WIDTH = $clog2(DEPTH),
@@ -11,7 +11,7 @@ module miso_fifo #(
     input logic [DATA_LENGTH-1:0][DATA_WIDTH-1:0] i_data,       
     input logic [DATA_LENGTH-1:0] i_valid,
     output logic [DATA_WIDTH-1:0] o_data,                          
-    output logic o_empty, o_full, o_pop_valid       
+    output logic o_empty, o_full, o_enough_slots, o_pop_valid
 );
     localparam _8x8 = 2'b00;
     localparam _4x4 = 2'b01;
@@ -147,5 +147,6 @@ module miso_fifo #(
     always_comb begin
         o_full = (w_pointer == DEPTH - 1);
         o_empty = (w_pointer == r_pointer);
+        o_enough_slots = (DEPTH - (w_pointer)) > DATA_LENGTH;
     end
 endmodule

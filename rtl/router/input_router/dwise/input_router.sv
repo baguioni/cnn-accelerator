@@ -25,6 +25,9 @@ module input_router #(
     input logic [ADDR_WIDTH-1:0] i_start_addr, i_addr_end,
     output logic o_read_done, o_done,
 
+    // Convolution parameters
+    input logic i_conv_mode, // 0: PWise, 1: DWise,
+
     // Address Generator Control signals
     input logic [ADDR_WIDTH-1:0] i_i_size, i_o_size, i_stride,
     input logic [ADDR_WIDTH-1:0] i_i_c_size, i_i_c,
@@ -51,10 +54,10 @@ module input_router #(
     logic [0:ADDR_LENGTH-1][ADDR_WIDTH-1:0] ag_addr;
     logic ag_valid;
 
-    logic [2:0] state;
-
     // Row Group related signals
     logic router_addr_empty, router_data_empty;
+    logic [ADDR_WIDTH-1:0] pw_start_addr, pw_end_addr;
+    logic pw_addr_write_en;
 
     spad #(
         .ADDR_WIDTH(ADDR_WIDTH),
@@ -96,8 +99,11 @@ module input_router #(
         .i_en(i_en),
         .i_reg_clear(i_reg_clear),
         .i_pop_en(i_pop_en),
+        .i_conv_mode(i_conv_mode),
         .i_start_addr(i_start_addr),
         .i_o_size(i_o_size),
+        .i_i_size(i_i_size),
+        .i_i_c_size(i_i_c_size),
         .i_stride(i_stride),
         .o_row_id(row_id),
         .o_o_x(o_x),
@@ -112,7 +118,10 @@ module input_router #(
         .o_reg_clear(router_reg_clear),
         .o_ready(o_ready),
         .o_context_done(o_context_done),
-        .o_state(state)
+        .o_pw_start_addr(pw_start_addr),
+        .o_pw_end_addr(pw_end_addr),
+        .o_pw_addr_write_en(pw_addr_write_en),
+        .i_pw_route_done(pw_route_done)
     );
 
     address_generator #(
@@ -143,7 +152,6 @@ module input_router #(
                 o_addr_empty will be high
             When all the data has been pushed from the router
                 o_data_empty will be high
-
     */
     row_group #(
         .ROWS(ROWS),
@@ -175,5 +183,37 @@ module input_router #(
     );
 
     assign o_done = pop_en;
+
+    logic pw_route_done;
+    logic [ROWS-1:0] pw_miso_full;
+
+    // // PWise router
+    // router_array #(
+    //     .COUNT(ROWS),
+    //     .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),
+    //     .ADDR_WIDTH(ADDR_WIDTH),
+    //     .DATA_WIDTH(DATA_WIDTH),
+    //     .SPAD_N(SPAD_N),
+    //     .MISO_DEPTH(MISO_DEPTH)
+    // ) router_array (
+    //     .i_clk(i_clk),
+    //     .i_nrst(i_nrst),
+    //     .i_reg_clear(router_reg_clear),
+    //     .i_id(row_id),
+    //     .i_start_addr(pw_start_addr),
+    //     .i_end_addr(pw_end_addr),
+    //     .i_addr_write_en(pw_addr_write_en),
+    //     .i_ac_en(ac_en),
+    //     .i_data(spad_data_out),
+    //     .i_data_valid(spad_data_out_valid),
+    //     .i_addr(tr_data_addr),
+    //     .i_miso_pop_en(pop_en),
+    //     .i_p_mode(i_p_mode),
+    //     .o_data(o_data),
+    //     .o_data_valid(o_data_valid),
+    //     .o_data_empty(router_data_empty),
+    //     .o_miso_full(pw_miso_full),
+    //     .o_route_done(pw_route_done)
+    // );
 
 endmodule

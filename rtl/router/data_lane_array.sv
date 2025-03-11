@@ -9,6 +9,7 @@ module data_lane_array #(
     input logic i_clk,
     input logic i_nrst,
     input logic i_reg_clear,
+    input logic i_fifo_ptr_reset,
 
     input logic [COUNT-1:0] i_id,
 
@@ -78,6 +79,7 @@ module data_lane_array #(
                 .i_reg_clear(i_reg_clear),
                 .i_ac_en(i_ac_en),
                 .i_miso_pop_en(rr_pop_en[ii]),
+                .i_fifo_ptr_reset(i_fifo_ptr_reset),
                 .i_start_addr(i_start_addr),
                 .i_end_addr(i_end_addr),
                 .i_addr_write_en(i_addr_write_en & (i_id == ii)),

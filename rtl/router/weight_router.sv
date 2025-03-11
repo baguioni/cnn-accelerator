@@ -1,9 +1,9 @@
-module input_router #(
+module weight_router #(
     parameter int DATA_WIDTH = 8,
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int SPAD_N = SPAD_DATA_WIDTH / DATA_WIDTH,
     parameter int ADDR_WIDTH = 8,
-    parameter int ROWS = 4,
+    parameter int COLUMNS = 4,
     parameter int MISO_DEPTH = 16
 )(
     input logic i_clk,
@@ -20,11 +20,8 @@ module input_router #(
     input logic i_conv_mode,
 
     // Activation related signals
-    input logic [ADDR_WIDTH-1:0] i_i_size,
-    input logic [ADDR_WIDTH-1:0] i_o_size,
-    input logic [ADDR_WIDTH-1:0] i_stride,
     input logic [ADDR_WIDTH-1:0] i_i_c_size,
-    input logic [ADDR_WIDTH-1:0] i_i_c, // Which channel - For DWise
+    input logic [ADDR_WIDTH-1:0] i_o_c_size,
 
     // SPAD related signals
     input logic i_spad_write_en,
@@ -37,13 +34,13 @@ module input_router #(
     output logic o_read_done,
 
     // Output signals
-    output logic [ROWS-1:0][DATA_WIDTH-1:0] o_data,
-    output logic [ROWS-1:0] o_data_valid,
+    output logic [COLUMNS-1:0][DATA_WIDTH-1:0] o_data,
+    output logic [COLUMNS-1:0] o_data_valid,
 
     // Status signals
     output logic o_ready,
-    output logic o_context_done, // Done with current set of values
-    output logic o_done // Done with all output values
+    output logic o_context_done,
+    output logic o_done
 );
     // SPAD related signals
     // We will move this to top level module
@@ -62,7 +59,7 @@ module input_router #(
     logic route_en, reg_clear;
 
     // Controller to Router Array
-    logic [ROWS-1:0] id;
+    logic [COLUMNS-1:0] id;
     logic [ADDR_WIDTH-1:0] start_addr, end_addr;
     logic addr_write_en, fifo_pop_en, fifo_pop_ready, fifo_empty;
 
@@ -95,15 +92,15 @@ module input_router #(
         .i_data_in(spad_data_out),
         .i_data_in_valid(spad_data_out_valid),
         .o_spad_read_en(spad_read_en),
-        .o_spad_read_done(o_read_done), // We kind of assume that all the data is in the SPAD
+        .o_spad_read_done(o_read_done),
         .o_spad_read_addr(spad_read_addr),
         .o_addr(tr_addr),
         .o_data(tr_data),
         .o_data_valid(tr_data_valid)
     );
 
-    input_controller #(
-        .COUNT(ROWS),
+    router_controller #(
+        .COUNT(COLUMNS),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) input_controller (
         .i_clk(i_clk),
@@ -132,7 +129,7 @@ module input_router #(
     );
 
     data_lane_array #(
-        .COUNT(ROWS),
+        .COUNT(COLUMNS),
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(DATA_WIDTH),
         .SPAD_DATA_WIDTH(SPAD_DATA_WIDTH),

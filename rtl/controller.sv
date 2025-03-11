@@ -12,27 +12,119 @@ module top_controller # (
     parameter int ROWS = 2,
     parameter int ADDR_WIDTH = 8
 ) (
-    input logic i_clk, i_nrst, i_reg_clear,
+    input logic i_clk,
+    input logic i_nrst,
+    input logic i_reg_clear,
 
+    // SPAD related signals
+    // input logic i_spad_write_en,
+    // input logic i_spad_select, // 0 for weight, 1 for input
+    // output logic o_spad_w_write_en,
+    // output logic o_spad_i_write_en,
 
+    // Enable signals
     input logic i_route_en,
-    output logic o_ir_en, o_wr_en,
+    output logic o_ir_en,
+    output logic o_wr_en,
+    output logic o_ir_pop_en,
+    output logic o_wr_pop_en,
 
     // Ready signals
-    input logic i_ir_ready, i_wr_ready,
-    output logic o_ir_pop_en, o_wr_pop_en,
-
+    input logic i_ir_ready,
+    input logic i_wr_ready,
 
     // Done signals
-    input logic i_ir_done, i_wr_done, i_or_done,
-    input logic i_output_done, // From IR
+    input logic i_ir_context_done,
+    input logic i_wr_context_done,
+    input logic i_ir_done,
+    input logic i_wr_done,
     output logic o_done,
 
-    // Output router signals
-    input logic [ADDR_WIDTH-1:0] i_route_size,
-    output logic o_psum_out_en,
-    output logic o_or_en
+    // FIFO pointer reset signals
+    output o_ir_fifo_ptr_reset,
+    output o_wr_fifo_ptr_reset,
 );
+    logic [2:0] state;
+    parameter int IDLE = 0;
+    parameter int SPAD_WRITE = 1; // More for the AXI. Future work
+    parameter int ACTIVATION_ROUTING = 2;
+    parameter int COMPUTE = 3;
+    parameter int OUTPUT_ROUTING = 4;
+    parameter int DONE = 5;
+
+    // Create an FSM to control the entire process
+    /*
+        IDLE:
+        ACTIVATION_ROUTING: when route is enabled, then route
+        BOTH_ROUTE: when both weight and input routers are ready then pop
+        COMPUTE: when input router finished popping, then stop
+        OUTPUT_ROUTING
+        DONE
+    */
+
+
+    always_ff @(posedge i_clk or negedge i_nrst) begin
+        if(~i_nrst) begin
+            o_ir_en <= 0;
+            o_wr_en <= 0;
+            o_ir_pop_en <= 0;
+            o_wr_pop_en <= 0;
+            o_done <= 0;
+            o_ir_fifo_ptr_reset <= 0;
+            o_wr_fifo_ptr_reset <= 0;
+            state <= IDLE;
+        end else if (i_reg_clear) begin
+            o_ir_en <= 0;
+            o_wr_en <= 0;
+            o_ir_pop_en <= 0;
+            o_wr_pop_en <= 0;
+            o_done <= 0;
+            o_ir_fifo_ptr_reset <= 0;
+            o_wr_fifo_ptr_reset <= 0;
+            state <= IDLE;
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (i_route_en) begin
+                        o_ir_en <= 1;
+                        o_wr_en <= 1;
+                        state <= ACTIVATION_ROUTING;
+                    end else begin
+                        state <= IDLE;
+                    end
+                end
+
+                ACTIVATION_ROUTING: begin
+                    // Set to low to prevent router to autoroute after compute
+                    o_ir_en <= 0;
+                    o_wr_en <= 0;
+                    if (i_ir_ready & i_wr_ready) begin
+                        o_ir_pop_en <= 1;
+                        o_wr_pop_en <= 1;
+                        state <= COMPUTE;
+                    end else begin
+                        state <= ACTIVATION_ROUTING;
+                    end
+                end
+                
+                COMPUTE: begin
+                    if (i_ir_done & i_wr_done) begin
+                        state <= OUTPUT_ROUTING;
+                    end else if (i_ir_context_done & i_wr_context_done) begin
+                        // Route Weights and reset pointers of Input
+                        o_wr_en <= 1;
+                        o_ir_fifo_ptr_reset <= 1;
+                        state <= ACTIVATION_ROUTING;
+                    end else if (i_ir_context_done & i_wr_done) begin
+                        // Route Inputs
+                        state <= COMPUTE;
+                    end
+                end
+            endcase
+        end
+    end
+
+
 
     // Route signals
     always_ff @(posedge i_clk or negedge i_nrst) begin

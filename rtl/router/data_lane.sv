@@ -10,7 +10,7 @@ module data_lane #(
     input logic i_clk, i_nrst, i_reg_clear,
 
     // Control signals
-    input logic i_ac_en, i_miso_pop_en,
+    input logic i_ac_en, i_miso_pop_en, i_fifo_ptr_reset,
 
     // Address Reference
     input [ADDR_WIDTH-1:0] i_start_addr, i_end_addr,
@@ -120,6 +120,7 @@ module data_lane #(
         .i_clear(i_reg_clear),
         .i_write_en(f_data_hit[0] & write_en),
         .i_pop_en(i_miso_pop_en),
+        .i_r_pointer_reset(i_fifo_ptr_reset),
         .i_p_mode(i_p_mode),
         .i_data(f_data),
         .i_valid(f_data_hit),

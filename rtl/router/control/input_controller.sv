@@ -1,7 +1,7 @@
 /*
     Make this generic first, then we can add the DWise Convolution
 */
-module router_controller #(
+module input_controller #(
     parameter int COUNT = 4,
     parameter int ADDR_WIDTH = 8
 ) (
@@ -116,7 +116,7 @@ module router_controller #(
                     prev_addr <= i_start_addr + o_x * (i_i_size * i_i_c_size) + (o_y * i_i_c_size) + (i_i_c_size);
                     o_start_addr <= prev_addr;
                     o_addr_write_en <= 1;
-                    state <= XY_INCREMENT;    
+                    state <= XY_INCREMENT;
                 end
 
                 XY_INCREMENT: begin
@@ -169,13 +169,14 @@ module router_controller #(
                     if (i_fifo_empty) begin
                         o_pop_en <= 0;
                         o_reg_clear <= 1;
+
                         if (xy_done) begin
                             o_done <= 1;
                             state <= IDLE;
                         end else begin
-                            // Signal to tell weight router to reuse
                             o_context_done <= 1;
-                            state <= INIT;
+                            // Dont immediately go to IDLE, wait for signal from upper level
+                            state <= IDLE;
                         end
                         o_ready <= 0;
                     end else if (i_pop_en) begin

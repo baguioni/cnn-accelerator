@@ -10,6 +10,7 @@
 import argparse
 import subprocess
 import random
+import sys
 
 def generate_sequential_array(input_size, precision):
     max_value = 1 << precision
@@ -216,14 +217,42 @@ def main():
 
     # Check if the difference of output and golden_output
     sim_command = "diff output.txt golden_output.txt"
-    result = subprocess.run(sim_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    subprocess.run(sim_command, shell=True)
     print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
-    print('\nOutput vs Golden Comparison:')
-    if result.stdout:
-        print("Differences found :(")
-        #print(result.stdout)
-    else:
-        print("No differences found :)")
+    
+    try:
+        with open("output.txt", "r") as o_file, open("golden_output.txt", "r") as go_file:
+            print("Verifying output against golden output...")
+            print(f"Input Size: {input_size}, Output Size: {output_size}\nChannel Size: {channels}, Channel: {0}\nStride: {stride}, Precision Mode: {precision}")
+
+            for expected_line, golden_line in zip(o_file, go_file):
+                expected = expected_line.strip() if expected_line.strip() else None
+                golden = golden_line.strip() if golden_line.strip() else None
+
+                if expected == golden:
+                    print(f"OUTPUT MATCH {expected} (reference) == {golden} (golden)")
+                else:
+                    print(f"OUTPUT MISMATCH {expected} (reference) != {golden} (golden)")
+
+            # Check if one file is longer than the other
+            extra_output = o_file.readline().strip()
+            extra_golden = go_file.readline().strip()
+
+            if extra_output:
+                print("Warning: output.txt has extra lines not found in golden_output.txt.")
+            if extra_golden:
+                print("Warning: golden_output.txt has extra lines not found in output.txt.")
+
+    except FileNotFoundError:
+        print("Error opening output file!")
+        sys.exit(1)
+
+    # print('\nOutput vs Golden Comparison:')
+    # if result.stdout:
+    #     print("Differences found :(")
+    #     #print(result.stdout)
+    # else:
+    #     print("No differences found :)")
 
 if __name__ == "__main__":
     main()

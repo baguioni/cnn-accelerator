@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "rtl/global.svh"
+`include "../rtl/global.svh"
 `include "tb_top.svh"
 
 module tb_top;
@@ -59,10 +59,7 @@ module tb_top;
 
     initial begin
         // Iverilog
-        // $dumpfile("tb.vcd");
-        // $dumpvars(0, tb_top);
-
-        // VCS 
+        // $dumpfile("tb.        $fclose(output_file);
         $vcdplusfile("tb_top.vpd");
         $vcdpluson;
         $sdf_annotate("../mapped/top_mapped.sdf", dut);
@@ -183,31 +180,4 @@ module tb_top;
         end
     end
 
-    final begin
-        o_file = $fopen("output.txt", "r");
-        go_file = $fopen("golden_output.txt", "r");
-        if (o_file == 0 || go_file == 0) begin
-            $display("Error opening output file!");
-            $finish;
-        end
-
-        $display("Verifying output against golden output");
-        $display("Input Size: %d, Output Size %d, Channel Size: %d, Channel: %d, Stride: %d, Precision Mode: %d", i_size, o_size, i_c_size, i_c, stride, p_mode);
-
-        while (!feof(o_file) || !feof(go_file)) begin
-            o_l = $fscanf(g," %d ", expected );
-            go_l = $fscanf(g2," %d ", golden);
-        end
-
-        if (expected == golden) begin
-            $display("OUTPUT MATCH %h (reference) == %h (golden)", expected, golden);
-        end else begin
-            $display("OUTPUT MISMATCH %h (reference) != %h (golden)", expected, golden);
-        end
-
-        $display("Verification complete.");
-        $fclose(o_file);
-        $fclose(go_file);
-        $finish;
-    end
 endmodule

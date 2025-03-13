@@ -48,7 +48,7 @@ def generate_random_3d_array(input_size, channels, precision):
     
     return array_3d
 
-def convolve_2d(input_matrix, kernel, stride=1):
+def convolve_2d(input_matrix, kernel, precision, stride=1):
     input_rows = len(input_matrix)
     input_cols = len(input_matrix[0])
     kernel_size = len(kernel)
@@ -63,10 +63,12 @@ def convolve_2d(input_matrix, kernel, stride=1):
             sum_value = 0
             for ki in range(kernel_size):
                 for kj in range(kernel_size):
-                    sum_value += input_matrix[i + ki][j + kj] * kernel[ki][kj]
-            output[i // stride][j // stride] = sum_value
+                    input_val = to_precision(input_matrix[i + ki][j + kj],precision)
+                    kernel_val= to_precision(kernel[ki][kj],precision)
+                    sum_value += input_val * kernel_val
+                    # sum_value += input_matrix[i + ki][j + kj] * kernel[ki][kj]
+            output[i // stride][j // stride] = to_precision(sum_value,2*precision,signed=False)
     
-
     hex_output = [[format(val, 'x') for val in row] for row in output]
     
     return (hex_output, output_rows)
@@ -110,13 +112,8 @@ def output_to_file(array, n, filename):
     except IOError as e:
         print(f"An error occurred while writing to the file: {e}")
 
-def to_precision(number, bits):
-    n = f"{(number & ((1<<bits)-1)):0{bits}b}"
-    n = n[0]*(32-bits)+n
-    num = int(n, 2)
-    if num >= 2**(bits-1):
-        num -= 2**32
-    return num
+def to_precision(num, bits, signed=True):
+    return (num & ((1<<bits)-1)) - ((1<<bits) if signed else 0)
 
 def format_output(array):
     flattened_array = []
@@ -183,7 +180,7 @@ def main():
 
     kernel = generate_random_2d_array(3, precision)
 
-    output, output_size = convolve_2d(input_array[0], kernel, stride)
+    output, output_size = convolve_2d(input_array[0], kernel, precision, stride=stride)
 
     nhwc_array = convert_nchw_to_nhwc(input_array)
 

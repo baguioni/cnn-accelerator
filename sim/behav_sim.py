@@ -272,7 +272,7 @@ def main():
 
     # Check if the difference of output and golden_output
     sim_command = "diff output.txt golden_output.txt"
-    subprocess.run(sim_command, shell=True)
+    result = subprocess.run(sim_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     if result.stdout:
         print("Differences found :(")
         #print(result.stdout)

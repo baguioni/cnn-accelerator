@@ -112,8 +112,11 @@ def output_to_file(array, n, filename):
     except IOError as e:
         print(f"An error occurred while writing to the file: {e}")
 
-def to_precision(num, bits, signed=True):
-    return (num & ((1<<bits)-1)) - ((1<<bits) if signed else 0)
+def to_precision(num,bits,signed=True):
+    n = num & ((1<<bits)-1)
+    if (n & 1<<(bits-1)) and signed:
+        n = n - (1<<(bits))
+    return n
 
 def format_output(array):
     flattened_array = []

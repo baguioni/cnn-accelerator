@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 `include "rtl/global.svh"
+`include "tb.svh"
 
 module tb_top;
     localparam int SRAM_DATA_WIDTH = `SPAD_DATA_WIDTH;
@@ -83,14 +84,20 @@ module tb_top;
         i_w_addr_offset = 1;
         i_route_size = 9;
         i_route_en = 0;
+        i_size = `INPUT_SIZE;
+        i_c_size = `CHANNEL_SIZE;
+        i_c = `CHANNEL;
+        o_size = `OUTPUT_SIZE;
+        stride = `STRIDE;
+        p_mode = `PRECISION;
 
-        // Retrieve command-line arguments
-        if (!$value$plusargs("i_i_size=%d", i_size)) i_size = 10;
-        if (!$value$plusargs("i_c_size=%d", i_c_size)) i_c_size = 2;
-        if (!$value$plusargs("i_c=%d", i_c)) i_c = 0;
-        if (!$value$plusargs("i_o_size=%d", o_size)) o_size = 8;
-        if (!$value$plusargs("i_stride=%d", stride)) stride = 1;
-        if (!$value$plusargs("i_p_mode=%d", p_mode)) p_mode = 2'b00;
+        // // Retrieve command-line arguments
+        // if (!$value$plusargs("i_i_size=%d", i_size)) i_size = 10;
+        // if (!$value$plusargs("i_c_size=%d", i_c_size)) i_c_size = 2;
+        // if (!$value$plusargs("i_c=%d", i_c)) i_c = 0;
+        // if (!$value$plusargs("i_o_size=%d", o_size)) o_size = 8;
+        // if (!$value$plusargs("i_stride=%d", stride)) stride = 1;
+        // if (!$value$plusargs("i_p_mode=%d", p_mode)) p_mode = 2'b00;
 
         #10;
         i_nrst = 1;

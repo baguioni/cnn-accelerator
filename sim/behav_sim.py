@@ -184,9 +184,9 @@ def main():
     array_to_file(flatten_2d_array(kernel), 8, "kernel.txt")
     output_to_file(format_output(flatten_2d_array(output)), 1, "golden_output.txt")
 
-    sim_command = "xargs -a filelist.txt iverilog -g2012 -o dsn"
-    result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
-    sim_error = result.stderr
+    # sim_command = "xargs -a filelist.txt iverilog -g2012 -o dsn"
+    # result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
+    # sim_error = result.stderr
 
     # defaults to 8-bit precision
     p_mode = 0
@@ -195,6 +195,17 @@ def main():
     elif precision == 2:
         p_mode = 2
 
+    header = f"""`define DATA_WIDTH {input_size}
+    `define CHANNEL_SIZE {channels}
+    `define CHANNEL {0}
+    `define OUTPUT_SIZE {output_size}
+    `define STRIDE {stride}
+    `define PRECISION {p_mode}"""
+
+    with open("tb_top.svh", "w") as file:
+        file.write(header)
+    
+    print("tb_top.svh file has been generated.")
 
     vcs_cmd = [
         "vcs",
@@ -217,17 +228,14 @@ def main():
         f"+i_p_mode={p_mode}"
     ]
     # To add specific which channel to convolve
-    if not sim_error:
-        print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
+    print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
 
-        result = subprocess.run(vcs_cmd, shell=True, capture_output=True, text=True)
-        print(result.stdout)
-    else:
-        print(sim_error)
+    subprocess.run(vcs_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    print(result.stdout)
 
     # Check if the difference of output and golden_output
     sim_command = "diff output.txt golden_output.txt"
-    result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
+    result = subprocess.run(sim_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     print('\nOutput vs Golden Comparison:')
     if result.stdout:
         print("Differences found :(")

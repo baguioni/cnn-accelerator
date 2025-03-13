@@ -146,6 +146,25 @@ def convert_nchw_to_nhwc(nchw_array):
     
     return nhwc_array
 
+def parse_svh(file_path):
+    defines = {}
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            parts = line.split()
+            if len(parts) >= 2 and parts[0] == '`define':
+                key = parts[1]
+                value = ' '.join(parts[2:]).strip()
+                if value:
+                    try:
+                        # Evaluate expressions if they contain arithmetic operations
+                        value = eval(value, {}, defines)
+                    except Exception:
+                        pass  # Keep it as a string if it cannot be evaluated
+                defines[key] = value
+    
+    return defines
+
 def main():
     parser = argparse.ArgumentParser(description="Process input parameters.")
     parser.add_argument("input_size", type=int, help="Size of input")
@@ -210,15 +229,18 @@ def main():
 
     vcs_cmd = "vcs tb_top.sv ../mapped/top_mapped.v /cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/GF22FDX_SC7P5T_116CPP_BASE_CSC20L.v /cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/prim.v -sverilog -full64 -debug_pp +neg_tchk -R -l vcs.log"
     # To add specific which channel to convolve
-    print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
+    
 
     result = subprocess.run(vcs_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     print(result.stdout)
 
-    # Check if the difference of output and golden_output
-    sim_command = "diff output.txt golden_output.txt"
-    subprocess.run(sim_command, shell=True)
-    print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
+    defines = parse_svh("../rtl/global.svh")
+    print("Design Parameters:")
+    for key, value in defines.items():
+        print(f"{key}: {value}")
+    
+    print("--------------------------")
+    print("Running VCS simulation...")
     
     try:
         with open("output.txt", "r") as o_file, open("golden_output.txt", "r") as go_file:
@@ -247,12 +269,15 @@ def main():
         print("Error opening output file!")
         sys.exit(1)
 
-    # print('\nOutput vs Golden Comparison:')
-    # if result.stdout:
-    #     print("Differences found :(")
-    #     #print(result.stdout)
-    # else:
-    #     print("No differences found :)")
+
+    # Check if the difference of output and golden_output
+    sim_command = "diff output.txt golden_output.txt"
+    subprocess.run(sim_command, shell=True)
+    if result.stdout:
+        print("Differences found :(")
+        #print(result.stdout)
+    else:
+        print("No differences found :)")
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 `include "rtl/global.svh"
-`include "tb.svh"
+`include "tb_top.svh"
 
 module tb_top;
     localparam int SRAM_DATA_WIDTH = `SPAD_DATA_WIDTH;
@@ -65,7 +65,7 @@ module tb_top;
         $vcdplusfile("tb_top.vpd");
         $vcdpluson;
         $sdf_annotate("../mapped/top.sdf", dut);
-        Prime Time        
+        // Prime Time        
         $dumpfile("tb_top.dump");
         $dumpvars(0, tb_top);
     end
@@ -159,6 +159,9 @@ module tb_top;
         #20;
         i_route_en = 1;
 
+        #2000;
+        $finish;
+
         while(i_route_en == 1 & o_done != 1) begin // while SIG = "1"
             @(posedge i_clk); // when clock signal gets high
             counter++; // increase counter by 1
@@ -172,13 +175,13 @@ module tb_top;
         end
     end
 
-    // Terminate simulation when o_done is high
-    always @(posedge i_clk) begin
-        if (o_done) begin
-            $display("Simulation completed: o_done asserted.");
-            $display("Total cycles: %d", counter);
-            $fclose(output_file);
-            $finish;
-        end
-    end
+    // // Terminate simulation when o_done is high
+    // always @(posedge i_clk) begin
+    //     if (o_done) begin
+    //         $display("Simulation completed: o_done asserted.");
+    //         $display("Total cycles: %d", counter);
+    //         $fclose(output_file);
+    //         $finish;
+    //     end
+    // end
 endmodule

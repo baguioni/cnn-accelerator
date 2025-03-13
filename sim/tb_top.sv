@@ -65,7 +65,7 @@ module tb_top;
         // VCS 
         $vcdplusfile("tb_top.vpd");
         $vcdpluson;
-        $sdf_annotate("../mapped/top.sdf", dut);
+        $sdf_annotate("../mapped/top_mapped.sdf", dut);
         // Prime Time        
         $dumpfile("tb_top.dump");
         $dumpvars(0, tb_top);

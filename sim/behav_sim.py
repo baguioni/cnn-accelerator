@@ -122,13 +122,17 @@ def format_output(array):
     flattened_array = []
     
     for i in range(0, len(array), 2):
-        first_part = array[i][-2:]
+        first_part = array[i][-2:] if len(array[i]) >= 2 else f"{int(array[i], 16):02x}"
         
         if i + 1 < len(array):
-            second_part = array[i+1][-2:]
+            second_part = array[i+1][-2:] if len(array[i+1]) >= 2 else f"{int(array[i+1], 16):02x}"
         else:
             second_part = "00"
         
+        first_part = f"{int(first_part, 16):02x}"
+        second_part = f"{int(second_part, 16):02x}"
+        
+        print(first_part, second_part)
         combined_value = first_part + second_part
         flattened_array.append(combined_value)
     
@@ -204,6 +208,8 @@ def main():
     array_to_file(flatten_2d_array(kernel), 8, "kernel.txt")
     output_to_file(format_output(flatten_2d_array(output)), 1, "golden_output.txt")
 
+
+    return
     # sim_command = "xargs -a filelist.txt iverilog -g2012 -o dsn"
     # result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
     # sim_error = result.stderr

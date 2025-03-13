@@ -10,8 +10,9 @@ module tb_top;
     int counter = 0; // counter initialization
 
     // File-related variables
-    integer file, r, output_file;
+    integer file, r, output_file, o_file, go_file, o_l, go_l;
     logic [SRAM_DATA_WIDTH-1:0] mem_data;
+    logic [DATA_WIDTH*2-1:0] expected, golden;
 
     // Signals
     logic i_clk, i_nrst, i_reg_clear, i_write_en, i_route_en;
@@ -159,9 +160,6 @@ module tb_top;
         #20;
         i_route_en = 1;
 
-        #2000;
-        $finish;
-
         while(i_route_en == 1 & o_done != 1) begin // while SIG = "1"
             @(posedge i_clk); // when clock signal gets high
             counter++; // increase counter by 1
@@ -175,13 +173,41 @@ module tb_top;
         end
     end
 
-    // // Terminate simulation when o_done is high
-    // always @(posedge i_clk) begin
-    //     if (o_done) begin
-    //         $display("Simulation completed: o_done asserted.");
-    //         $display("Total cycles: %d", counter);
-    //         $fclose(output_file);
-    //         $finish;
-    //     end
-    // end
+    // Terminate simulation when o_done is high
+    always @(posedge i_clk) begin
+        if (o_done) begin
+            $display("Simulation completed: o_done asserted.");
+            $display("Total cycles: %d", counter);
+            $fclose(output_file);
+            $finish;
+        end
+    end
+
+    final begin
+        o_file = $fopen("output.txt", "r");
+        go_file = $fopen("golden_output.txt", "r");
+        if (o_file == 0 || go_file == 0) begin
+            $display("Error opening output file!");
+            $finish;
+        end
+
+        $display("Verifying output against golden output");
+        $display("Input Size: %d, Output Size %d, Channel Size: %d, Channel: %d, Stride: %d, Precision Mode: %d", i_size, o_size, i_c_size, i_c, stride, p_mode);
+
+        while (!feof(o_file) || !feof(go_file)) begin
+            o_l = $fscanf(g," %d ", expected );
+            go_l = $fscanf(g2," %d ", golden);
+        end
+
+        if (expected == golden) begin
+            $display("OUTPUT MATCH %h (reference) == %h (golden)", expected, golden);
+        end else begin
+            $display("OUTPUT MISMATCH %h (reference) != %h (golden)", expected, golden);
+        end
+
+        $display("Verification complete.");
+        $fclose(o_file);
+        $fclose(go_file);
+        $finish;
+    end
 endmodule

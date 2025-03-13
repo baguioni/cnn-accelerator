@@ -7,7 +7,6 @@
 # Run VCS or Icarus Verilog simulation
 # Output the results to a file
 
-
 import argparse
 import subprocess
 import random
@@ -196,11 +195,32 @@ def main():
     elif precision == 2:
         p_mode = 2
 
+
+    vcs_cmd = [
+        "vcs",
+        "tb_top.sv",
+        "../mapped/top_mapped.v",
+        "/cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/GF22FDX_SC7P5T_116CPP_BASE_CSC20L.v",
+        "/cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/prim.v",
+        "-sverilog",
+        "-full64",
+        "-debug_pp",
+        "+neg_tchk",
+        "-R",
+        "-l",
+        "vcs.log",
+        f"+i_i_size={input_size}",
+        f"+i_c_size={channels}",
+        "+i_c=0",
+        f"+i_o_size={output_size}",
+        f"+i_stride={stride}",
+        f"+i_p_mode={p_mode}"
+    ]
     # To add specific which channel to convolve
     if not sim_error:
         print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
-        sim_command = f'vvp dsn +i_i_size={input_size} +i_c_size={channels} +i_c={0} +i_o_size={output_size} +i_stride={stride} +i_p_mode={p_mode}'
-        result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
+
+        result = subprocess.run(vcs_cmd, shell=True, capture_output=True, text=True)
         print(result.stdout)
     else:
         print(sim_error)

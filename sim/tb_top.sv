@@ -57,16 +57,16 @@ module tb_top;
 
     initial begin
         // Iverilog
-        $dumpfile("tb.vcd");
-        $dumpvars(0, tb_top);
+        // $dumpfile("tb.vcd");
+        // $dumpvars(0, tb_top);
 
         // VCS 
-        // $vcdplusfile("tb_top.vpd");
-        // $vcdpluson;
-        // $sdf_annotate("../mapped/top.sdf", dut);
-        // Prime Time        
-        // $dumpfile("tb_top.dump");
-        // $dumpvars(0, tb_top);
+        $vcdplusfile("tb_top.vpd");
+        $vcdpluson;
+        $sdf_annotate("../mapped/top.sdf", dut);
+        Prime Time        
+        $dumpfile("tb_top.dump");
+        $dumpvars(0, tb_top);
     end
 
     // Testbench initialization

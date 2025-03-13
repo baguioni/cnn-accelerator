@@ -195,7 +195,7 @@ def main():
     elif precision == 2:
         p_mode = 2
 
-    header = f"""`define DATA_WIDTH {input_size}
+    header = f"""`define INPUT_SIZE {input_size}
     `define CHANNEL_SIZE {channels}
     `define CHANNEL {0}
     `define OUTPUT_SIZE {output_size}
@@ -207,30 +207,11 @@ def main():
     
     print("tb_top.svh file has been generated.")
 
-    vcs_cmd = [
-        "vcs",
-        "tb_top.sv",
-        "../mapped/top_mapped.v",
-        "/cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/GF22FDX_SC7P5T_116CPP_BASE_CSC20L.v",
-        "/cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/prim.v",
-        "-sverilog",
-        "-full64",
-        "-debug_pp",
-        "+neg_tchk",
-        "-R",
-        "-l",
-        "vcs.log",
-        f"+i_i_size={input_size}",
-        f"+i_c_size={channels}",
-        "+i_c=0",
-        f"+i_o_size={output_size}",
-        f"+i_stride={stride}",
-        f"+i_p_mode={p_mode}"
-    ]
+    vcs_cmd = "vcs tb_top.sv ../mapped/top_mapped.v /cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/GF22FDX_SC7P5T_116CPP_BASE_CSC20L.v /cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/prim.v -sverilog -full64 -debug_pp +neg_tchk -R -l vcs.log"
     # To add specific which channel to convolve
     print(f"input_size: {input_size}, channels: {channels}, output_size: {output_size}, stride: {stride}, precision: {precision}")
 
-    subprocess.run(vcs_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    result = subprocess.run(vcs_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     print(result.stdout)
 
     # Check if the difference of output and golden_output

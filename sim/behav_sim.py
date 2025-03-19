@@ -67,9 +67,9 @@ def convolve_2d(input_matrix, kernel, precision, stride=1):
                     kernel_val= to_precision(kernel[ki][kj],precision)
                     sum_value += input_val * kernel_val
                     # sum_value += input_matrix[i + ki][j + kj] * kernel[ki][kj]
-            output[i // stride][j // stride] = to_precision(sum_value,2*precision,signed=False)
+            output[i // stride][j // stride] = to_precision(sum_value,16,signed=False)
     
-    hex_output = [[format(val, 'x') for val in row] for row in output]
+    hex_output = [[format(val, '04x') for val in row] for row in output]
     
     return (hex_output, output_rows)
 
@@ -209,7 +209,6 @@ def main():
     output_to_file(format_output(flatten_2d_array(output)), 1, "golden_output.txt")
 
 
-    return
     # sim_command = "xargs -a filelist.txt iverilog -g2012 -o dsn"
     # result = subprocess.run(sim_command, shell=True, capture_output=True, text=True)
     # sim_error = result.stderr
@@ -232,6 +231,7 @@ def main():
         file.write(header)
     
     print("tb_top.svh file has been generated.")
+    return
 
     vcs_cmd = "vcs tb_top.sv ../mapped/top_mapped.v /cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/GF22FDX_SC7P5T_116CPP_BASE_CSC20L.v /cad/tools/libraries/dwc_logic_in_gf22fdx_sc7p5t_116cpp_base_csc20l/GF22FDX_SC7P5T_116CPP_BASE_CSC20L_FDK_RELV02R80/model/verilog/prim.v -sverilog -full64 -debug_pp +neg_tchk -R -l vcs.log"
     # To add specific which channel to convolve
